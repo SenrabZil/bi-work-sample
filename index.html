@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picking up a pilot in progress, and finishing it: the M2i Platform — approach note, interactive</title>
+<style>
+  :root{
+    --slate:#2F3E4E; --slate-2:#5A6B7C; --moss:#5B7A5E; --moss-2:#E6EDE6;
+    --ochre:#B8862B; --ochre-2:#F6EEDC; --brick:#8A3A2A; --brick-2:#F3E3DF;
+    --paper:#F8F7F3; --card:#FFFFFF; --line:#D9D6CE; --ink:#23303B;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Charter,"Bitstream Charter","Iowan Old Style",Georgia,serif;font-size:17px;line-height:1.6}
+  h1,h2,h3,.sans{font-family:"Avenir Next","Avenir","Helvetica Neue",Helvetica,Arial,sans-serif}
+  h1{font-size:2.1rem;line-height:1.15;margin:0 0 .4rem;color:var(--slate);font-weight:600;letter-spacing:-.01em}
+  h2{font-size:1.35rem;margin:0 0 .6rem;color:var(--slate);font-weight:600}
+  h3{font-size:1.02rem;margin:0 0 .3rem;color:var(--slate);font-weight:600}
+  p{margin:0 0 .9rem;max-width:68ch}
+  .wrap{max-width:900px;margin:0 auto;padding:2.2rem 1.4rem 4rem}
+  header{border-bottom:3px solid var(--ochre);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  header .meta{color:var(--slate-2);font-style:italic;margin:0}
+  header .note{margin-top:.8rem;font-size:.95rem;color:var(--slate-2);max-width:none}
+  section{margin:2.4rem 0}
+  .lede{font-size:1.08rem}
+
+
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+  .facts div{background:var(--card);border:1px solid var(--line);padding:.8rem 1rem}
+  .facts h3{font-size:.95rem;margin-bottom:.25rem}
+  .facts ul{margin:0 0 0 1.1rem;padding:0;font-size:.95rem}
+  .facts li{margin:.2rem 0}
+  @media (max-width:640px){ .facts{grid-template-columns:1fr} }
+
+  /* phases */
+  .phases{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--card)}
+  .phase{border:0;background:var(--card);text-align:left;padding:.9rem 1rem;cursor:pointer;font:inherit;color:var(--ink);border-right:1px solid var(--line);position:relative}
+  .phase:last-child{border-right:0}
+  .phase .when{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.8rem;color:var(--slate-2);display:block;margin-bottom:.15rem}
+  .phase .what{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate)}
+  .phase[aria-selected="true"]{background:var(--moss-2)}
+  .phase[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--moss)}
+  .phase:focus-visible{outline:3px solid var(--ochre);outline-offset:-3px}
+  .panel{display:none;background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px;padding:1.2rem 1.3rem}
+  .panel.on{display:block}
+  .panel ul{margin:.3rem 0 .8rem 1.1rem;padding:0}
+  .panel li{margin:.3rem 0}
+  .panel li b{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate)}
+  .rulebar{background:var(--brick-2);border-left:4px solid var(--brick);padding:.6rem .9rem;margin:0 0 1rem;font-size:.98rem}
+
+  /* lineage */
+  .lineage{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:.6rem 0 0}
+  .node{flex:1 1 120px;min-width:118px;border:1px solid var(--line);background:var(--card);padding:.7rem .6rem;cursor:pointer;font:inherit;color:var(--ink);text-align:left;position:relative}
+  .node+.node{margin-left:-1px}
+  .node .lbl{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate);display:block;font-size:.95rem}
+  .node .sub{font-size:.82rem;color:var(--slate-2)}
+  .node[aria-selected="true"]{background:var(--ochre-2);border-color:var(--ochre);z-index:1}
+  .node:focus-visible{outline:3px solid var(--ochre);outline-offset:-3px}
+  .node:not(:last-child)::after{content:"";position:absolute;right:-7px;top:50%;width:0;height:0;border-left:7px solid var(--line);border-top:6px solid transparent;border-bottom:6px solid transparent;z-index:2}
+  .lineage-out{border:1px solid var(--ochre);border-top:0;background:var(--card);padding:1rem 1.2rem;min-height:5.5rem}
+  .lineage-out p:last-child{margin-bottom:0}
+
+  /* demo */
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1.2rem 1.3rem}
+  table{border-collapse:collapse;width:100%;font-size:.95rem;margin:.6rem 0}
+  th,td{padding:.45rem .6rem;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate);font-size:.85rem;background:var(--paper)}
+  td.diff{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--slate-2)}
+  tr.break td{background:var(--brick-2)}
+  tr.break td.diff{color:var(--brick);font-weight:600}
+  tr.clean td.diff{color:var(--moss);font-weight:600}
+  .btns{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0 .4rem}
+  button.act{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.92rem;font-weight:600;border:1.5px solid var(--slate);background:var(--card);color:var(--slate);padding:.5rem .9rem;border-radius:4px;cursor:pointer}
+  button.act.primary{background:var(--slate);color:#fff}
+  button.act:disabled{opacity:.45;cursor:not-allowed}
+  button.act:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+  .gate{margin-top:.8rem;padding:.7rem .9rem;border-radius:4px;font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.95rem;border:1px solid var(--line)}
+  .gate.blocked{background:var(--brick-2);border-color:var(--brick);color:var(--brick)}
+  .gate.open{background:var(--moss-2);border-color:var(--moss);color:var(--moss)}
+  .gate.idle{color:var(--slate-2)}
+  .fine{font-size:.85rem;color:var(--slate-2)}
+
+
+
+  /* feeds */
+  .reg{width:100%;border-collapse:collapse;font-size:.88rem;margin:.4rem 0 1rem}
+  .reg th,.reg td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+  .reg th{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.78rem;color:var(--slate);background:var(--paper)}
+  .reg tr{cursor:pointer} .reg tr[aria-selected="true"] td{background:var(--ochre-2)}
+  .tier{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.72rem;font-weight:600;padding:.1rem .4rem;border-radius:3px;white-space:nowrap}
+  .tier.d{background:var(--moss-2);color:var(--moss)} .tier.r{background:var(--brick-2);color:var(--brick)} .tier.p{background:var(--ochre-2);color:var(--ochre)}
+  .contract{border:1px solid var(--ochre);background:var(--card);padding:1rem 1.2rem;border-radius:4px}
+  .contract dl{display:grid;grid-template-columns:150px 1fr;gap:.25rem .8rem;margin:0 0 .6rem;font-size:.93rem}
+  .contract dt{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate);font-size:.82rem;padding-top:.15rem}
+  .contract dd{margin:0}
+  .pull{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.6rem 0}
+  .pull>div{border:1px solid var(--line);padding:.5rem .7rem}
+  .pull .v{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:1.3rem;font-weight:600;color:var(--slate)}
+  .pull .k{font-size:.78rem;color:var(--slate-2)}
+  @media (max-width:640px){ .contract dl{grid-template-columns:1fr} .pull{grid-template-columns:1fr 1fr} .reg .hide{display:none} }
+
+
+  /* appendices + glossary */
+  .app{font-size:.93rem}
+  .app ol{margin:.3rem 0 0 1.2rem;padding:0} .app li{margin:.3rem 0}
+  .app a{color:var(--slate);text-decoration:underline;text-decoration-color:var(--ochre)}
+  .app ul{margin:.3rem 0 0 1.2rem;padding:0}
+  .g{border-bottom:1px dotted var(--ochre);cursor:help;text-decoration:none}
+  .pop{position:absolute;z-index:20;max-width:300px;background:var(--card);border:1px solid var(--slate);border-radius:4px;padding:.55rem .75rem;font-size:.86rem;line-height:1.45;box-shadow:0 4px 14px rgba(47,62,78,.15);display:none}
+  .pop b{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--slate);display:block;margin-bottom:.15rem}
+  .gloss{columns:2;column-gap:1.5rem;font-size:.9rem} .gloss div{break-inside:avoid;margin-bottom:.5rem} .gloss b{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--slate)}
+  @media (max-width:640px){ .gloss{columns:1} }
+
+  /* dashboard */
+  .dash{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1.1rem 1.2rem}
+  .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin:0 0 .9rem}
+  .chip{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.85rem;font-weight:600;border:1.5px solid var(--line);background:var(--card);color:var(--slate-2);padding:.3rem .75rem;border-radius:999px;cursor:pointer}
+  .chip[aria-pressed="true"]{border-color:var(--slate);background:var(--slate);color:#fff}
+  .chip:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1rem}
+  .kpi{border:1px solid var(--line);padding:.6rem .8rem;border-top:3px solid var(--slate)}
+  .kpi .v{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:1.55rem;font-weight:600;color:var(--slate);line-height:1.1}
+  .kpi .k{font-size:.8rem;color:var(--slate-2)}
+  .kpi.warn{border-top-color:var(--brick)} .kpi.warn .v{color:var(--brick)}
+  .kpi.good{border-top-color:var(--moss)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .card{border:1px solid var(--line);padding:.7rem .8rem .5rem}
+  .card h3{font-size:.9rem;margin-bottom:.1rem}
+  .card .sub{font-size:.78rem;color:var(--slate-2);margin:0 0 .4rem}
+  .card svg{width:100%;height:auto;display:block;overflow:visible}
+  .card svg text{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:11px;fill:var(--slate-2)}
+  .card svg .axis{stroke:var(--line);stroke-width:1}
+  .card svg .grid{stroke:var(--line);stroke-width:.6;stroke-dasharray:2 3}
+  .card svg .bar{fill:var(--slate)} .card svg .bar.hi{fill:var(--brick)} .card svg .bar.mid{fill:var(--ochre)}
+  .card svg .lbl{fill:var(--ink);font-size:11px}
+  .card svg .dot{fill:var(--moss);fill-opacity:.85;stroke:#fff;stroke-width:1.2} .card svg .dot.hi{fill:var(--brick)} .card svg .dot.mid{fill:var(--ochre)}
+  .card svg .line{fill:none;stroke:var(--slate);stroke-width:2}
+  .card svg .line.b{stroke:var(--moss)}
+  .card svg .rf{fill:var(--moss)} .card svg .rf.fail{fill:var(--brick)} .card svg .rf.slow{fill:var(--ochre)}
+  .card svg .quad{fill:var(--brick-2)}
+  .tip{position:fixed;pointer-events:none;background:var(--slate);color:#fff;font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.8rem;padding:.35rem .55rem;border-radius:3px;display:none;z-index:9;max-width:220px}
+  .legend{display:flex;gap:.9rem;font-size:.78rem;color:var(--slate-2);margin:.2rem 0 0}
+  .legend i{display:inline-block;width:10px;height:10px;margin-right:.3rem;vertical-align:-1px}
+  .dashnotes{margin:1rem 0 0;padding:0 0 0 1.1rem;font-size:.95rem}
+  .dashnotes li{margin:.25rem 0}
+  @media (max-width:640px){ .kpis{grid-template-columns:1fr 1fr} .grid2{grid-template-columns:1fr} }
+
+
+  /* header cards */
+  .hcards{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin:1.2rem 0 0}
+  .hcards div{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--ochre);padding:.7rem .9rem}
+  .hcards b{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--slate);display:block;margin-bottom:.15rem}
+  .hcards p{font-size:.9rem;margin:0;color:var(--slate-2)}
+  /* timeline */
+  .tl{position:relative;margin:1.2rem 0 .6rem;padding:0 .5rem}
+  .tl .track{position:absolute;left:3%;right:3%;top:19px;height:3px;background:linear-gradient(90deg,var(--ochre) 0 36%,var(--moss) 36% 58%,var(--slate) 58% 88%,var(--brick) 88% 100%)}
+  .tl .dots{display:grid;grid-template-columns:repeat(8,1fr);position:relative}
+  .tl button{background:none;border:0;cursor:pointer;font:inherit;color:var(--ink);text-align:center;padding:0 .2rem}
+  .tl .d{display:block;width:16px;height:16px;border-radius:50%;border:3px solid var(--slate);background:var(--card);margin:11px auto 6px;box-sizing:border-box}
+  .tl button[aria-selected="true"] .d{background:var(--slate);box-shadow:0 0 0 4px var(--ochre-2)}
+  .tl .w{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.72rem;color:var(--slate-2);display:block}
+  .tl .m{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;color:var(--slate);display:block;line-height:1.2}
+  .tl button:focus-visible{outline:3px solid var(--ochre);outline-offset:2px;border-radius:4px}
+  .tlleg{display:flex;gap:1rem;font-size:.8rem;color:var(--slate-2);margin:0 0 .3rem}
+  .tlleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:.3rem;vertical-align:-1px}
+  .tlpanel{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--slate);padding:1rem 1.2rem}
+  .tlpanel ul{margin:.3rem 0 .6rem 1.1rem;padding:0} .tlpanel li{margin:.25rem 0} .tlpanel li b{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate)}
+  .tlpanel p:last-child{margin-bottom:0}
+  /* dashboard tabs */
+  .dtabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin:0 0 1rem;flex-wrap:wrap}
+  .dtab{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:.5rem .9rem;color:var(--slate-2);cursor:pointer}
+  .dtab[aria-selected="true"]{color:var(--slate);border-bottom-color:var(--ochre)}
+  .dtab:focus-visible{outline:3px solid var(--ochre);outline-offset:-3px}
+  .dpanel{display:none} .dpanel.on{display:block}
+  .badge{display:inline-block;font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.7rem;font-weight:600;padding:.1rem .45rem;border-radius:3px;vertical-align:middle;margin-left:.4rem}
+  .badge.r{background:var(--brick-2);color:var(--brick)} .badge.d{background:var(--moss-2);color:var(--moss)} .badge.p{background:var(--ochre-2);color:var(--ochre)} .badge.x{background:#EEE;color:var(--slate-2)}
+  .card svg .bar.b{fill:var(--moss)} .card svg .bar.x{fill:#B9BEC4} .card svg .ceiling{stroke:var(--brick);stroke-width:2;stroke-dasharray:5 3}
+  .card svg .area{fill:var(--moss-2)} .card svg .line.o{stroke:var(--ochre)}
+  /* checklist */
+  .chk{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.5rem 0}
+  .chk label{display:flex;gap:.5rem;align-items:flex-start;border:1px solid var(--line);padding:.5rem .6rem;font-size:.9rem;cursor:pointer}
+  .chk input{margin-top:.2rem}
+  .recon{width:100%;border-collapse:collapse;font-size:.88rem;margin:.4rem 0}
+  .recon th,.recon td{text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--line)}
+  .recon th{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.78rem;color:var(--slate);background:var(--paper)}
+  .st{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;font-size:.8rem} .st.ok{color:var(--moss)} .st.hold{color:var(--brick)} .st.na{color:var(--slate-2)}
+  /* simulator */
+  .sim{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1.1rem 1.2rem}
+  .sim .row{display:grid;grid-template-columns:200px 1fr 70px;gap:.8rem;align-items:center;margin:.35rem 0;font-size:.9rem}
+  .sim .row label{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate);font-size:.82rem}
+  .sim input[type=range]{width:100%;accent-color:var(--slate)}
+  .sim .val{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;text-align:right;color:var(--slate)}
+  .sim .out{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:.8rem 0}
+  .sim .out div{border:1px solid var(--line);padding:.5rem .7rem;border-top:3px solid var(--slate)}
+  .sim .out .v{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:1.3rem;font-weight:600;color:var(--slate)} .sim .out .k{font-size:.78rem;color:var(--slate-2)}
+  .sim svg{width:100%;height:auto;display:block;overflow:visible} .sim svg text{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:11px;fill:var(--slate-2)}
+  .sim svg .grid{stroke:var(--line);stroke-width:.6;stroke-dasharray:2 3} .sim svg .line{fill:none;stroke:var(--slate);stroke-width:2} .sim svg .line.b{stroke:var(--moss)} .sim svg .lbl{fill:var(--ink)}
+  /* geo */
+  .geo{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1.1rem 1.2rem}
+  .geo svg{width:100%;height:auto;display:block;overflow:visible} .geo svg text{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:11px;fill:var(--slate-2)}
+  .geo svg .grid{stroke:var(--line);stroke-width:.6;stroke-dasharray:2 3} .geo svg .axis{stroke:var(--line)} .geo svg .line{fill:none;stroke:var(--slate);stroke-width:2} .geo svg .line.g{stroke:var(--ochre);stroke-width:1.6} .geo svg .ev{stroke:var(--brick);stroke-width:1.2;stroke-dasharray:3 3} .geo svg .evd{fill:var(--brick)} .geo svg .corr{fill:none;stroke:var(--moss);stroke-width:2} .geo svg .zero{stroke:var(--slate-2);stroke-width:1}
+  .geo svg .lbl{fill:var(--ink)}
+  .geo .credit{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.8rem;color:var(--slate-2);margin:.3rem 0 0}
+  .evs{width:100%;border-collapse:collapse;font-size:.88rem;margin:.6rem 0}
+  .evs th,.evs td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+  .evs th{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.78rem;color:var(--slate);background:var(--paper)}
+  .evs tr{cursor:pointer} .evs tr[aria-selected="true"] td{background:var(--brick-2)}
+  .evs td:first-child{white-space:nowrap} .evs td.num{text-align:right;font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif}
+  .caveat{border-left:3px solid var(--ochre);padding:.3rem .8rem;font-size:.92rem;margin:.6rem 0 0;color:var(--ink)}
+  @media (max-width:640px){ .hcards{grid-template-columns:1fr} .tl .dots{grid-template-columns:repeat(4,1fr)} .tl .track{display:none} .chk{grid-template-columns:1fr} .sim .row{grid-template-columns:1fr} .sim .out{grid-template-columns:1fr 1fr} .evs .hide{display:none} }
+
+
+  .exit{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.6rem 0 0}
+  .exit div{background:var(--card);border:1px solid var(--line);padding:.8rem 1rem;border-left:4px solid var(--brick)}
+  .exit b{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--slate);display:block;margin-bottom:.2rem}
+  .exit p{font-size:.93rem;margin:0}
+  .exit .how{font-size:.85rem;color:var(--slate-2);margin-top:.35rem}
+  @media (max-width:640px){ .exit{grid-template-columns:1fr} }
+
+  /* rules */
+  details{border-top:1px solid var(--line);padding:.7rem 0}
+  details:last-of-type{border-bottom:1px solid var(--line)}
+  summary{cursor:pointer;font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;color:var(--slate);list-style:none;display:flex;justify-content:space-between;gap:1rem}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--ochre);font-weight:400;font-size:1.3rem;line-height:1}
+  details[open] summary::after{content:"–"}
+  summary:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+  details .body{padding:.5rem 0 .2rem}
+  .ev{border-left:3px solid var(--moss);padding:.2rem .8rem;margin:.5rem 0 0;font-size:.97rem;color:var(--ink)}
+
+  /* fabric */
+  .plain{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--slate);padding:1.1rem 1.3rem;border-radius:0 6px 6px 0}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:.6rem}
+  .two h3{font-size:.92rem}
+  .two ul{margin:.2rem 0 0 1.1rem;padding:0;font-size:.95rem}
+  .two li{margin:.2rem 0}
+
+  /* evidence */
+  .evid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .evid div{background:var(--card);border:1px solid var(--line);padding:.9rem 1rem;border-top:3px solid var(--moss)}
+  .evid .n{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:1.7rem;font-weight:600;color:var(--slate);line-height:1;margin-bottom:.2rem}
+  .evid p{font-size:.93rem;margin:0}
+  footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.9rem;color:var(--slate-2)}
+  @media (max-width:640px){ .phases{grid-template-columns:1fr} .phase{border-right:0;border-bottom:1px solid var(--line)} .two,.evid{grid-template-columns:1fr} .node:not(:last-child)::after{display:none} }
+  section.deep details.deeper{border-top:1px solid var(--line);border-bottom:0;padding:.4rem 0 .6rem}
+  section.deep summary{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;cursor:pointer;list-style:none}
+  section.deep summary::-webkit-details-marker{display:none}
+  section.deep summary h2{margin:0;border:0;padding:0}
+  section.deep summary .hint{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ochre);white-space:nowrap}
+  section.deep details[open] summary .hint::after{content:" — close"} section.deep details:not([open]) summary .hint::after{content:" — open"}
+  .expand{display:flex;gap:.6rem;margin:.6rem 0 0}
+  .expand button{font-family:"Avenir Next",Avenir,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.8rem;font-weight:600;border:1.5px solid var(--line);background:var(--card);color:var(--slate-2);padding:.25rem .7rem;border-radius:999px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Picking up a pilot in progress, and finishing it: the M2i Platform from pilot to regular operation</h1>
+  <p class="meta">Approach note for the Technical Senior Data Analyst assignment, EIT RawMaterials.</p>
+  <p class="meta">Liz Barnes, Special Dimension, September 2026.</p>
+  <p class="note">Read as it opens, this is the two-page approach note from the proposal: same content, same commitments. The sections marked <i>deeper</i> hold the supporting material — the layer map, feed register, dashboard mock-ups, market analysis, the Fabric migration path and the appendices — and open on a click. Dashboard and simulator figures are illustrative, not M2i data.</p>
+  <div class="expand"><button type="button" id="openall">Open every deeper section</button><button type="button" id="closeall">Close them</button></div>
+  <div class="hcards">
+    <div><b>What I finish</b><p>The pilot’s stated purpose: a validated data model, on a documented lineage, behind tiered security, with usage measured. The things regular operation needs and a pilot is allowed to lack.</p></div>
+    <div><b>What I don’t touch</b><p>Nothing partners see, until the replacement reconciles against what it replaces. No production change in the first four weeks except a documented emergency fix.</p></div>
+    <div><b>When</b><p>Weeks one to four reading and checking. Weeks five to eight the first measured deliverable. Then the six RFP areas monthly, paced to the pilot’s end on 31 December 2027, a year before the contract does.</p></div>
+  </div>
+</header>
+
+<section>
+  <h2>My current understanding</h2>
+  <p class="lede">The M2i Platform is live, and it is a pilot. A Power BI report opened in the browser behind an emailed login code, partner-only, free of charge until the end of 2027, with the stated purpose of validating the data model before regular operation. The two-year contract runs from November 2026; the pilot is scheduled to end on 31 December 2027, extendable in six-month steps. So the assignment spans the pilot’s close and whatever comes after it, and the job is not to keep a pilot running. It is to finish one: to leave a platform that can be operated, charged for and handed on. Picking that up mid-flight, the first risk is not that I fail to add something new. It is that I break something partners already rely on, or repeat work that was done and never written down. Everything below is built around that risk, and pointed at that end date.</p>
+</section>
+
+<section>
+  <h2>What I know about the platform before day one</h2>
+  <p>From the published platform page, the pilot-phase terms of 13 May 2026 and the M2i webinar of 17 September 2026. Anything not on this list is a week-one question, not an assumption.</p>
+  <div class="facts">
+    <div><h3>Shape</h3><ul><li>Four areas today: Region, Trade, Commodity, Industry</li><li>About 2.5 million data points across markets, prices, trade flows, value chains</li><li>The CRMA Tracker benchmarks production against Critical Raw Materials Act targets</li><li>No API, no search, no alerts, no user uploads</li><li>Announced for the last quarter of 2026: the Battery dashboard and additions for copper, iron ore, steel and tungsten; partner trainings from 20 November</li></ul></div>
+    <div><h3>Data, in three tiers</h3><ul><li>EIT RM proprietary: ERMA data, CRMA Tracker, self-calculated KPIs such as CAGR</li><li>Third-party licensed, marked restricted-use: the Battery dashboards in Industry, no raw export, no AI training</li><li>Derived data: public sources harmonised so the original is no longer identifiable; some Region tables downloadable</li></ul></div>
+    <div><h3>Access</h3><ul><li>Partners only: 5, 3 or 1 accounts by partner tier</li><li>Login by a five-digit emailed code, one person per address</li><li>Users are leadership, project managers, business development and research teams at member organisations</li></ul></div>
+    <div><h3>Terms that shape the work</h3><ul><li>EIT RM may correct, replace or remove any content or source at any time; members have no claim to historical time series</li><li>Pilot runs to 31 December 2027, extendable in six-month steps</li><li>Restricted-use content carries attribution and export obligations that must survive any redesign</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>The first eight weeks, and the road to the pilot’s end</h2>
+  <div class="tlleg"><span><i style="background:var(--ochre)"></i>read and check</span><span><i style="background:var(--moss)"></i>build one thing</span><span><i style="background:var(--slate)"></i>deliverables on the baseline</span><span><i style="background:var(--brick)"></i>finish the pilot</span></div>
+  <div class="tl"><div class="track"></div>
+    <div class="dots" role="tablist">
+      <button role="tab" aria-selected="true" data-t="0"><span class="d"></span><span class="w">Week 1</span><span class="m">Inventory</span></button>
+      <button role="tab" aria-selected="false" data-t="1"><span class="d"></span><span class="w">Week 2</span><span class="m">Lineage and tiers</span></button>
+      <button role="tab" aria-selected="false" data-t="2"><span class="d"></span><span class="w">Week 3</span><span class="m">Reconciliation list</span></button>
+      <button role="tab" aria-selected="false" data-t="3"><span class="d"></span><span class="w">Week 4</span><span class="m">Gap list, definition of done</span></button>
+      <button role="tab" aria-selected="false" data-t="4"><span class="d"></span><span class="w">Weeks 5 to 8</span><span class="m">First deliverable</span></button>
+      <button role="tab" aria-selected="false" data-t="5"><span class="d"></span><span class="w">Month 3 on</span><span class="m">The six areas, monthly</span></button>
+      <button role="tab" aria-selected="false" data-t="6"><span class="d"></span><span class="w">When asked</span><span class="m">A partner API?</span></button>
+      <button role="tab" aria-selected="false" data-t="7"><span class="d"></span><span class="w">31 Dec 2027</span><span class="m">Pilot ends: finished means</span></button>
+    </div>
+  </div>
+  <div class="tlpanel" id="tlpanel"></div>
+</section>
+
+
+<section>
+  <h2>What finished looks like</h2>
+  <p>A pilot is allowed to have an unvalidated model, undocumented lineage, flat access and no usage figures. Regular operation is not. These are the exit criteria I would ask the Innovation Team to agree in month one and hold me to at the pilot’s end. Each names the evidence that shows it is met, because a criterion without evidence is a hope.</p>
+  <div class="exit">
+    <div><b>1. The data model is validated</b><p>Every headline figure on every page has been recomputed from source at least once and the comparison filed. Open breaks have a materiality rating and an owner.</p><p class="how">Evidence: the reconciliation register, complete, with dates.</p></div>
+    <div><b>2. Lineage is documented end to end</b><p>Source to tile for every dataset, tier recorded, harmonisation steps for derived data written down so the original can be reached again.</p><p class="how">Evidence: the lineage map, and a successor able to trace one tile to source unaided.</p></div>
+    <div><b>3. Security follows the licences</b><p>Internal EIT RM users and external partners separated as tenants, each with its own authentication and administration; row- and object-level security tested per tenant, partner tier and restricted-use dataset; export controls removed where the licence requires; attribution kept.</p><p class="how">Evidence: a test log per tenant, tier and restricted dataset. ING, Amsterdam 2014: designed the role-based access model for the loan loss provisioning system, four roles, each with its own view of the same provisioning data and a separation between who prepares and who approves.</p></div>
+    <div><b>4. Usage is measured</b><p>The pilot exists to collect user experience. By its end, active users, pages viewed and time on page are on a tile, per partner tier, for at least six months.</p><p class="how">Evidence: the Platform health page with real numbers instead of a dash.</p></div>
+    <div><b>5. Releases run without me</b><p>A release gate like the one on the Platform health page, used for at least two dataset releases by someone other than the contractor.</p><p class="how">Evidence: two filed release records with the gate ticked by a named person.</p></div>
+    <div><b>6. A successor could start on Monday</b><p>A handover pack: inventory, lineage, the reconciliation register, the release process, the assumptions register, the list of things that only work because someone remembers.</p><p class="how">Evidence: the pack, and one walkthrough with the person who will own it.</p></div>
+  </div>
+  <p style="margin-top:.9rem">The pilot-to-regular-operation transition also carries a commercial question that is EIT’s, not mine: the terms say partners have no claim to a paid service after the pilot. Whatever they decide, criteria three and four are what make either answer possible.</p>
+</section>
+
+<section class="deep"><details class="deeper"><summary><h2>Where I look in weeks one to four</h2><span class="hint">deeper</span></summary>
+  <p>Select a layer to see what gets checked there before anything is changed.</p>
+  <div class="lineage" role="tablist">
+    <button class="node" role="tab" aria-selected="true" data-l="0"><span class="lbl">Sources</span><span class="sub">internal, external, M365</span></button>
+    <button class="node" role="tab" aria-selected="false" data-l="1"><span class="lbl">Bronze / Silver</span><span class="sub">lakehouse ingest, cleanse</span></button>
+    <button class="node" role="tab" aria-selected="false" data-l="2"><span class="lbl">Gold</span><span class="sub">fact and dimension tables</span></button>
+    <button class="node" role="tab" aria-selected="false" data-l="3"><span class="lbl">Semantic model</span><span class="sub">measures, DAX, security</span></button>
+    <button class="node" role="tab" aria-selected="false" data-l="4"><span class="lbl">Reports</span><span class="sub">Power BI, embedded</span></button>
+  </div>
+  <div class="lineage-out" id="lineage-out"></div>
+</details></section>
+
+
+
+<section class="deep"><details class="deeper"><summary><h2>Feeds the platform could take in</h2><span class="hint">deeper</span></summary>
+  <p>The derived-data tier is public sources harmonised, and source expansion with ingestion and reconciliation evidence is a named deliverable. The register below is what I would write down in week one for each candidate feed, before any of them is connected. Select a feed to see its intake contract and first-pull check side by side. Whether any of these is already in M2i is a week-one question; none is assumed.</p>
+  <div class="chips" id="feedchips" role="tablist" aria-label="Candidate feed"></div>
+  <div class="grid2" style="margin-top:.8rem">
+    <div class="contract" id="contract"></div>
+    <div class="contract" id="pullbox"></div>
+  </div>
+  <p class="fine" style="margin-top:.7rem">The same intake discipline I used on the ENTSO-E Transparency and eSett feeds at Sympower: row counts against the source, one checksum column, a held state that a person has to clear.</p>
+</details></section>
+
+<section class="deep"><details class="deeper"><summary><h2>What dashboards on that baseline look like</h2><span class="hint">deeper</span></summary>
+  <p>Five pages in the shape M2i needs, built from illustrative data so the design choices are visible: one measure defined once, every tile traceable to its Gold table and carrying its data tier, and materiality colouring the analyst has to answer for. The commodity-group filter drives every page. Hover for the numbers.</p>
+  <div class="dash" id="dash">
+    <div class="chips" role="group" aria-label="Commodity group">
+      <button class="chip" aria-pressed="true" data-g="all">All commodities</button>
+      <button class="chip" aria-pressed="false" data-g="battery">Battery metals</button>
+      <button class="chip" aria-pressed="false" data-g="magnet">Magnet metals</button>
+      <button class="chip" aria-pressed="false" data-g="base">Base metals</button>
+    </div>
+    <div class="dtabs" role="tablist">
+      <button class="dtab" role="tab" aria-selected="true" data-d="0">Commodity</button>
+      <button class="dtab" role="tab" aria-selected="false" data-d="1">Trade</button>
+      <button class="dtab" role="tab" aria-selected="false" data-d="2">Region and geopolitics</button>
+      <button class="dtab" role="tab" aria-selected="false" data-d="3">Industry</button>
+      <button class="dtab" role="tab" aria-selected="false" data-d="4">Platform health</button>
+    </div>
+
+    <div class="dpanel on" data-d="0">
+      <div class="kpis" id="kpis"></div>
+      <div class="grid2">
+        <div class="card"><h3>EU import reliance <span class="badge d">derived</span></h3><p class="sub">share of apparent consumption imported, 2025</p><svg id="bars" viewBox="0 0 400 230"></svg>
+          <div class="legend"><span><i style="background:var(--brick)"></i>above 80%</span><span><i style="background:var(--ochre)"></i>50 to 80%</span><span><i style="background:var(--slate)"></i>below 50%</span></div></div>
+        <div class="card"><h3>Supply risk against economic importance <span class="badge d">derived</span></h3><p class="sub">bubble size is import volume; shaded quadrant is the watch list</p><svg id="scatter" viewBox="0 0 400 230"></svg></div>
+        <div class="card"><h3>Price index, trailing twelve months <span class="badge d">derived</span></h3><p class="sub">January 2025 = 100, group average</p><svg id="lines" viewBox="0 0 400 200"></svg>
+          <div class="legend"><span><i style="background:var(--slate)"></i>selected group</span><span><i style="background:var(--moss)"></i>all commodities</span></div></div>
+        <div class="card"><h3>CRMA benchmark tracker <span class="badge p">proprietary</span></h3><p class="sub">EU domestic share of consumption, 2025, against the Act’s 2030 benchmarks</p><svg id="crma" viewBox="0 0 400 300"></svg>
+          <div class="legend"><span><i style="background:var(--slate)"></i>2025 share, group</span><span><i style="background:var(--brick);height:2px;width:14px;vertical-align:3px"></i>2030 benchmark</span></div></div>
+      </div>
+    </div>
+
+    <div class="dpanel" data-d="1">
+      <div class="grid2">
+        <div class="card"><h3>Top partner countries, EU imports <span class="badge d">derived: Comext</span></h3><p class="sub">share of import value, 2025, selected group</p><svg id="partners" viewBox="0 0 400 230"></svg></div>
+        <div class="card"><h3>Supplier concentration <span class="badge d">derived: Comext</span></h3><p class="sub">Herfindahl index of import shares by partner, 0 to 10,000; above 2,500 is concentrated</p><svg id="hhi" viewBox="0 0 400 230"></svg></div>
+      </div>
+      <div class="card" style="margin-top:1rem"><h3>EU import value, monthly <span class="badge d">derived: Comext</span></h3><p class="sub">EUR billion, selected group, with the trade balance</p><svg id="tradeline" viewBox="0 0 840 200"></svg>
+        <div class="legend"><span><i style="background:var(--slate)"></i>imports</span><span><i style="background:var(--ochre)"></i>exports</span><span><i style="background:var(--moss-2);border:1px solid var(--moss)"></i>net deficit</span></div></div>
+    </div>
+
+    <div class="dpanel" data-d="2">
+      <div class="grid2">
+        <div class="card"><h3>Largest single third-country supplier <span class="badge p">proprietary: CRMA</span></h3><p class="sub">share of EU supply from the top supplier, against the Act’s 65% ceiling</p><svg id="single" viewBox="0 0 400 260"></svg></div>
+        <div class="card"><h3>Where the supply comes from <span class="badge d">derived</span></h3><p class="sub">share of EU imports by region, selected group</p><svg id="regions" viewBox="0 0 400 260"></svg></div>
+      </div>
+      <p class="fine" style="margin-top:.7rem">The events strip and the index correlation live in the geopolitical section below; on the platform they would be one page with these two tiles.</p>
+    </div>
+
+    <div class="dpanel" data-d="3">
+      <div class="grid2">
+        <div class="card"><h3>EU battery cell demand against announced capacity <span class="badge r">restricted-use</span></h3><p class="sub">GWh per year; no table export on this tile</p><svg id="battery" viewBox="0 0 400 230"></svg>
+          <div class="legend"><span><i style="background:var(--slate)"></i>demand</span><span><i style="background:var(--moss)"></i>announced capacity</span></div></div>
+        <div class="card"><h3>Value-chain coverage in the EU <span class="badge d">derived</span></h3><p class="sub">stages with EU capacity, selected group; hollow means none</p><svg id="chain" viewBox="0 0 400 230"></svg></div>
+      </div>
+      <p class="fine" style="margin-top:.7rem">The restricted-use badge is not decoration: on the platform it removes the export control from the visual and keeps the provider’s attribution in the footer, because the licence says so.</p>
+    </div>
+
+    <div class="dpanel" data-d="4">
+      <div class="kpis">
+        <div class="kpi good"><div class="v">26 / 30</div><div class="k">refreshes within target</div></div>
+        <div class="kpi warn"><div class="v">2</div><div class="k">datasets on hold</div></div>
+        <div class="kpi"><div class="v">7 / 9</div><div class="k">datasets reconciled this month</div></div>
+        <div class="kpi"><div class="v">—</div><div class="k">active users, 30 days<span class="badge x">deliverable 4</span></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>Refresh health, last thirty days</h3><p class="sub">semantic model refresh duration in minutes</p><svg id="refresh" viewBox="0 0 400 200"></svg>
+          <div class="legend"><span><i style="background:var(--moss)"></i>within target</span><span><i style="background:var(--ochre)"></i>slow</span><span><i style="background:var(--brick)"></i>failed</span></div></div>
+        <div class="card"><h3>Release gate for the next dataset</h3><p class="sub">toggle the controls; the dataset is published only when all are on</p>
+          <div class="chk" id="chk">
+            <label><input type="checkbox" checked> Source row count matches</label>
+            <label><input type="checkbox" checked> Checksum column matches</label>
+            <label><input type="checkbox"> Headline figures reconciled to original</label>
+            <label><input type="checkbox" checked> Data tier recorded</label>
+            <label><input type="checkbox"> Transformation logic documented</label>
+            <label><input type="checkbox" checked> Refresh ran unattended twice</label>
+          </div>
+          <div class="gate blocked" id="chkgate"></div></div>
+      </div>
+      <div class="card" style="margin-top:1rem"><h3>Reconciliation status by dataset</h3><p class="sub">the register, as a tile</p>
+        <table class="recon"><thead><tr><th>Dataset</th><th>Tier</th><th>Last reconciled</th><th>Breaks</th><th>Status</th></tr></thead><tbody>
+          <tr><td>Trade flows (Comext)</td><td><span class="tier d">Derived</span></td><td>3 Sep</td><td>0</td><td><span class="st ok">Reconciled</span></td></tr>
+          <tr><td>Production (PRODCOM)</td><td><span class="tier d">Derived</span></td><td>3 Sep</td><td>0</td><td><span class="st ok">Reconciled</span></td></tr>
+          <tr><td>World production (USGS)</td><td><span class="tier d">Derived</span></td><td>28 Aug</td><td>0</td><td><span class="st ok">Reconciled</span></td></tr>
+          <tr><td>Prices (Pink Sheet)</td><td><span class="tier d">Derived</span></td><td>5 Sep</td><td>1 (revision)</td><td><span class="st hold">Held</span></td></tr>
+          <tr><td>FX (ECB)</td><td><span class="tier d">Derived</span></td><td>daily</td><td>0</td><td><span class="st ok">Reconciled</span></td></tr>
+          <tr><td>CRMA Tracker</td><td><span class="tier p">Proprietary</span></td><td>1 Sep</td><td>0</td><td><span class="st ok">Reconciled</span></td></tr>
+          <tr><td>ERMA project data</td><td><span class="tier p">Proprietary</span></td><td>1 Sep</td><td>0</td><td><span class="st ok">Reconciled</span></td></tr>
+          <tr><td>Battery feed</td><td><span class="tier r">Restricted</span></td><td>—</td><td>—</td><td><span class="st hold">Held: contract review</span></td></tr>
+          <tr><td>Usage metrics</td><td><span class="tier p">Proprietary</span></td><td>—</td><td>—</td><td><span class="st na">Not built (deliverable 4)</span></td></tr>
+        </tbody></table></div>
+    </div>
+
+    <ul class="dashnotes">
+      <li>Thresholds are stated on the page, not hidden in the DAX. An evaluator can argue with 80%; they cannot argue with a colour.</li>
+      <li>Every number here is one measure in one place in the semantic model. The same figure never appears with two definitions on two pages.</li>
+      <li>Each tile carries its data tier. A restricted-use tile never offers a table export; a derived-data tile names the public original it was built from.</li>
+      <li>Platform health is a page partners can see, not an admin portal. If the data is stale or held, the person reading the dashboard is the first who should know.</li>
+    </ul>
+  </div>
+  <div class="tip" id="tip"></div>
+</details></section>
+
+<section>
+  <h2>The rule that matters most, worked through</h2>
+  <div class="demo">
+    <p>When logic moves from Power BI into Fabric, the Power BI version stays in place as the reference. The Fabric result is recomputed and compared at row level. Only when the comparison is clean is the old version retired. Try it: the gate at the bottom will not open while a break exists.</p>
+    <table id="cmp">
+      <thead><tr><th>Commodity, EU imports 2025 (illustrative, kt)</th><th>Power BI reference</th><th>Fabric rebuild</th><th>Difference</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="btns">
+      <button class="act primary" id="run">Run row-level comparison</button>
+      <button class="act" id="fix" disabled>Apply the fix: tonne to kilotonne on the nickel feed</button>
+      <button class="act" id="reset">Reset</button>
+    </div>
+    <div class="gate idle" id="gate">Retire the Power BI version: not yet assessed.</div>
+    <p class="fine" style="margin-top:.7rem">This is how the SFTR reporting migration at Cboe Clear Europe was accepted: a Power Query reference implementation, and a Python rebuild that had to match it figure for figure before anything was switched over.</p>
+  </div>
+</section>
+
+<section class="deep"><details class="deeper"><summary><h2>Market analysis the platform should make possible</h2><span class="hint">deeper</span></summary>
+  <p>Not my view of the market; that is the Innovation Team’s job and the partners’. What the data analyst owes them is that four kinds of question can be answered from the model with the assumptions visible. Each needs a named dataset, and each appears below with the tier it draws on.</p>
+  <ul class="dashnotes" style="margin-top:0">
+    <li><b>Price against concentration.</b> Does a commodity’s price volatility rise with its supplier concentration? Needs the Pink Sheet series and the Comext HHI on one grain. Derived tier.</li>
+    <li><b>Demand scenarios by end use.</b> What does EU lithium, nickel or cobalt demand look like in 2030 under stated assumptions? Needs a scenario table with every assumption as a row, not a number typed into DAX. Material intensity is one of those rows per cathode chemistry, because that is how battery demand on the platform is cut. Proprietary tier, because EIT owns the assumptions.</li>
+    <li><b>Growth rates that can be audited.</b> EIT’s CAGR KPIs recomputed from the series with the base year and end year shown on the tile, so a partner can see why 2019 to 2025 differs from 2021 to 2025.</li>
+    <li><b>Value-chain coverage.</b> Where the EU has extraction but not processing, or processing but not recycling, by commodity. Needs the CRMA Tracker joined to the value-chain master, with operating capacity held apart from announced capacity so that today and potential are never one number.</li>
+  </ul>
+  <div class="sim">
+    <h3>Demand scenario, worked through</h3>
+    <p class="sub" style="font-size:.85rem;color:var(--slate-2);margin:0 0 .6rem">Illustrative starting values. The assumptions are the sliders; the chart prints them, because a scenario without its assumptions on the page is a forecast pretending to be a fact.</p>
+    <div class="row"><label for="s1">EU EV sales growth, % per year</label><input type="range" id="s1" min="5" max="35" value="18"><span class="val" id="v1">18%</span></div>
+    <div class="row"><label for="s2">Average pack size, kWh</label><input type="range" id="s2" min="40" max="100" value="65"><span class="val" id="v2">65</span></div>
+    <div class="row"><label for="s3">Lithium intensity, kg LCE per kWh</label><input type="range" id="s3" min="0.5" max="1.2" step="0.05" value="0.85"><span class="val" id="v3">0.85</span></div>
+    <div class="row"><label for="s4">Share met by recycling in 2030, %</label><input type="range" id="s4" min="0" max="40" value="10"><span class="val" id="v4">10%</span></div>
+    <div class="out">
+      <div><div class="v" id="o1"></div><div class="k">EU EV sales 2030, million</div></div>
+      <div><div class="v" id="o2"></div><div class="k">kt LCE needed, 2030</div></div>
+      <div><div class="v" id="o3"></div><div class="k">kt LCE from recycling</div></div>
+      <div><div class="v" id="o4"></div><div class="k">kt LCE to import or extract</div></div>
+    </div>
+    <svg id="simchart" viewBox="0 0 840 190"></svg>
+    <div class="legend"><span><i style="background:var(--slate)"></i>primary need</span><span><i style="background:var(--moss)"></i>after recycling</span></div>
+    <p class="caveat">Base: 2.4 million EU EV sales in 2025, illustrative. Every number on this panel changes when a slider moves and none of them is a forecast. On the platform, each slider is a row in a scenario table with an owner and a date.</p>
+  </div>
+</details></section>
+
+<section class="deep"><details class="deeper"><summary><h2>Geopolitical influences as data, not narrative</h2><span class="hint">deeper</span></summary>
+  <p>Export controls, ore bans, tariffs and sanctions arrive as text. Before the platform can show their effect they have to become rows: a date, a country, a commodity, a measure, a source. The panel below is a Mirzak Analytics analysis of that idea: a metals price index against a geopolitical risk index, with the events marked and the correlation computed rather than asserted. Select an event to see the index move in the months after it.</p>
+  <div class="geo">
+    <svg id="geo1" viewBox="0 0 840 230"></svg>
+    <div class="legend"><span><i style="background:var(--slate)"></i>industrial metals index (left axis, Jan 2019 = 100)</span><span><i style="background:var(--ochre)"></i>geopolitical risk index (right axis)</span><span><i style="background:var(--brick);height:2px;width:14px;vertical-align:3px"></i>event</span></div>
+    <svg id="geo2" viewBox="0 0 840 130" style="margin-top:.8rem"></svg>
+    <div class="legend"><span><i style="background:var(--moss)"></i>rolling 12-month correlation, metals index vs geopolitical risk index</span></div>
+    <table class="evs" id="evs"><thead><tr><th>Date</th><th>Event</th><th class="hide">Commodities</th><th>Metals index, 1 month</th><th>3 months</th><th class="hide">Risk index that month</th></tr></thead><tbody></tbody></table>
+    <p class="caveat" id="evnote"></p>
+    <p class="caveat">What this can say: over the period the correlation between the two indices is <span id="corrall"></span> and it swings sign; the relationship is episodic, not structural. What it cannot say: that any event caused any move. Prices in 2020 and 2022 were driven by a pandemic and a war that the risk index also captures; the event windows overlap with everything else that happened in those months. The right design is to keep the events table joined to the series so the question can be asked properly, with a control window, when someone needs the answer.</p>
+    <p class="credit">Analysis: Mirzak Analytics. Series approximated from published monthly index levels for illustration; replace with the LME Index or S&amp;P GSCI Industrial Metals export and the Caldara–Iacoviello GPR monthly file before publication. Event dates are as published by the issuing governments; see reference basis.</p>
+  </div>
+  <div class="ev" style="margin-top:.8rem">Cboe Clear Europe: I set up the workshops that turned ESMA’s SFTR reporting requirements into agreed field-level logic across risk, operations and IT. Regulation became data before it became a report. The events table above is the same translation, applied to trade measures instead of reporting rules.</div>
+</details></section>
+
+<section>
+  <h2>Rules I keep throughout</h2>
+  <details open>
+    <summary>Reference implementation before migration</summary>
+    <div class="body"><p>Nothing that replaces existing logic is accepted on my say-so. It is accepted on a clean comparison against the logic it replaces, with the comparison filed as evidence.</p>
+    <div class="ev">Cboe Clear Europe, 2024–25: Power Query reference built first; AI-generated Python rebuild validated against it figure by figure; the freed capacity went to eight further regulatory deliverables.</div></div>
+  </details>
+  <details>
+    <summary>Every figure that matters is recomputed once, independently</summary>
+    <div class="body"><p>A headline number that reaches a dashboard has been reproduced from source at least once by a route that does not share code with the production logic.</p>
+    <div class="ev">De Nederlandsche Bank statistical return: every automated figure checked against a hand-built reference before submission, then the validated logic handed to the quant team to productionise.</div></div>
+  </details>
+  <details>
+    <summary>Documentation is written while doing, not afterwards</summary>
+    <div class="body"><p>Each change to a model, pipeline or report carries a note of what changed, why, and how to reverse it. Handover then becomes collecting notes, not reconstructing history.</p>
+    <div class="ev">Sympower, 2025–26: the handover toolkit for my own successor in the Nordic BESS analyst role: inventory, lineage, and the list of things that only worked because I remembered them.</div></div>
+  </details>
+  <details>
+    <summary>The data tier travels with the data</summary>
+    <div class="body"><p>Proprietary, restricted-use or derived is recorded on every dataset from ingest to tile, so security, export and attribution rules are enforced by the model rather than remembered by the analyst. When EIT RM replaces or removes a source, as the terms allow, the lineage shows exactly which tiles change.</p>
+    <div class="ev">Cboe Clear Europe: a regulatory data warehouse view for Risk Oversight where every column carried its source and reporting obligation, so a change upstream could be traced to every affected return. ING, Amsterdam 2014: the role-based access model for the loan loss provisioning system, four roles over one dataset, each seeing only what its role needed.</div></div>
+  </details>
+  <details>
+    <summary>Regulation becomes data before it becomes a dashboard</summary>
+    <div class="body"><p>A benchmark, an export control or a reporting rule is entered as a dated, sourced row with a scope before any tile refers to it. Then the tile can be recomputed when the rule changes, and the analyst can show which rule produced which number.</p>
+    <div class="ev">Cboe Clear Europe: workshops that turned ESMA’s SFTR requirements into agreed field-level logic across risk, operations and IT, before any report was built on them.</div></div>
+  </details>
+  <details>
+    <summary>Monthly planning names outputs, not hours</summary>
+    <div class="body"><p>Each deliverable is agreed as an implemented thing with an acceptance check before the hours are spent, in line with the RFP’s output-based review of time sheets.</p>
+    <div class="ev">Sympower, 125-asset migration: cutover runbook with source and data readiness checks, Datahub and eSett monitoring, and operational validation as the acceptance step.</div></div>
+  </details>
+</section>
+
+<section>
+  <h2>On Microsoft Fabric, plainly</h2>
+  <div class="plain">
+    <p>Power BI, Power Query (M), DAX and semantic modelling are daily tools for me and are the layer that produces every report on the platform. I have not run a Fabric lakehouse or Fabric pipelines in production. I would rather state this now than have it discovered in month two.</p>
+    <div class="two">
+      <div><h3>Same as I use today</h3><ul><li>Semantic models and the DAX engine</li><li>Dataflows Gen2 (this is Power Query)</li><li>Import, DirectQuery and security models</li><li>Report design, refresh and performance tuning</li></ul></div>
+      <div><h3>New to me, closed in weeks one to four</h3><ul><li>Lakehouse layering and Delta tables</li><li>Notebooks and pipeline orchestration</li><li>Direct Lake mode</li><li>Workspace and deployment pipelines</li></ul></div>
+    </div>
+    <p style="margin-top:.9rem;margin-bottom:0">The read-before-write period is where that gap closes, on the platform’s real objects rather than a training environment. The comparison rule above means no Fabric migration is accepted until it reconciles against the Power BI logic it replaces. I will also sit the Microsoft Fabric Analytics Engineer exam (DP-600) by 30 November 2026.</p>
+  </div>
+</section>
+
+<section class="deep"><details class="deeper"><summary><h2>From Power BI to Fabric, in that order</h2><span class="hint">deeper</span></summary>
+  <p>The platform’s reports are Power BI today and the RFP asks for selected logic to move into Fabric. The order matters more than the tooling: first make the Power BI model look like a lakehouse, then migrate one layer at a time with the old version kept as the reference, and switch the semantic model last. Partners see no change until every hop has reconciled. Open each stage.</p>
+  <div class="rulebar">Rule: restructure before migrating, migrate before switching, and retire nothing until the comparison is clean.</div>
+  <details open>
+    <summary><span>1. Shape the Power BI model like a lakehouse</span><span>months one to two</span></summary>
+    <div class="body"><p>No Fabric yet. In the existing Power Query, the transformations are arranged into three named groups: <b>Bronze</b> (raw extracts as they arrive, not loaded), <b>Silver</b> (typed and cleaned, not loaded), <b>Gold</b> (the fact and dimension tables the model reads). Each Gold query ends with a written grain and source note, every measure is defined once in one place, and every dataset carries its data tier. Nothing changes for partners; the report looks the same.</p>
+    <div class="ev">Why first: the migration then becomes a rename, not a redesign. The M code in each group is what the Dataflows Gen2 will run; the group names are the lakehouse layer names. The work sample built for this proposal is structured this way.</div></div>
+  </details>
+  <details>
+    <summary><span>2. Write the migration register</span><span>month two</span></summary>
+    <div class="body"><p>Every transformation and measure listed with where it lives today, its Fabric target, whether it moves, and the comparison evidence that has to be filed before the old version is retired. Not everything moves. A weighted average that is recomputed on every visual belongs in a Gold column; time intelligence and anything that depends on the slicer context belongs in DAX and stays; a status derived from two columns is derived once, in Silver, not per report.</p>
+    <div class="two">
+      <div><h3>Moves into Fabric</h3><ul><li>Source pulls and raw landing (Bronze)</li><li>Type, clean, derive-once columns (Silver)</li><li>Allocation and precomputed ratios at fact grain (Gold)</li><li>Scheduled refresh and its run log</li><li>Access roles, with membership as groups rather than names</li></ul></div>
+      <div><h3>Stays in the semantic model</h3><ul><li>Time intelligence (trailing twelve months, year on year)</li><li>Measures that depend on the filter context (weighted HHI across groups)</li><li>The release-gate verdict: the checks are written by the pipeline, the verdict stays a measure</li><li>Report-level formatting and thresholds stated on the page</li></ul></div>
+    </div></div>
+  </details>
+  <details>
+    <summary><span>3. Migrate one hop at a time</span><span>month three on, paced by the monthly plan</span></summary>
+    <div class="body"><p>Bronze first: a Dataflow Gen2 lands the raw extracts into a lakehouse on a schedule, and runs unattended twice before it counts (release-gate check six). Then Silver, then Gold, each a dataflow that reads the layer below and writes the next. After every hop the new layer is compared, row for row, against the Power Query output it replaces, and the comparison is filed. The .pbix keeps reading its original sources until Gold matches; only then does it repoint.</p>
+    <div class="ev">What partners notice: nothing. The dashboards read the same figures from a different place. That is the test of a correct migration, not a feature of it.</div></div>
+  </details>
+  <details>
+    <summary><span>4. Switch the semantic model last</span><span>when Gold has reconciled</span></summary>
+    <div class="body"><p>A Direct Lake semantic model is built on the Gold tables with the same measures, the same roles and the same names, edited from Power BI Desktop. The import model and the Direct Lake model run side by side and are compared at row level, exactly as the reference-versus-rebuild exercise above. When the comparison is clean the reports are repointed and the import model is retired, with the comparison record kept as the evidence.</p></div>
+  </details>
+  <details>
+    <summary><span>5. Then what Fabric makes possible</span><span>regular operation</span></summary>
+    <div class="body"><p>Once the stack is in place the things the pilot lacked stop being projects. Usage telemetry lands in Bronze like any other feed and becomes the Platform health tiles (deliverable 4). The independent recompute that today is a Python script on someone’s laptop runs as a notebook against Silver, on a schedule, writing its result to the reconciliation register. A partner API, if EIT wants one, reads Gold tables that already carry their tier. And a successor who opens the workspace sees the same three layers, the same names, and the notes written while doing.</p></div>
+  </details>
+</details></section>
+
+<section>
+  <h2>What finishing looks like from my side</h2>
+  <div class="evid">
+    <div><div class="n">125</div><p>battery assets cut over in the Nordic settlement restructuring at Sympower: DSO, BRP and BSP registrations, Datahub and eSett monitoring, live flows where an error costs euros the next day.</p></div>
+    <div><div class="n">100,000</div><p>live trades across power, oil, coal, gas and FX in a three-phase Endur migration at Vattenfall, with migration bridges, mappings and reconciliation tooling built for each phase, and the old system switched off at the end of it.</p></div>
+    <div><div class="n">2</div><p>loan loss provisioning data models designed at ING: fact tables, views and APIs in 2004, and again in 2014 for the replacement system, this time with the four access roles, with ten years of operation between them to learn from.</p></div>
+    <div><div class="n">1</div><p>handover toolkit written for my own successor at Sympower. I know what a good handover contains because I have had to write one, and what a bad one costs because I have received one.</p></div>
+  </div>
+</section>
+
+<section class="app deep"><details class="deeper"><summary><h2>Appendix A: reference basis</h2><span class="hint">deeper</span></summary>
+  <p>Every statement in “My current understanding” and “What I know about the platform before day one” traces to one of these. Nothing about the platform in this note comes from anywhere else.</p>
+  <ol>
+    <li>EIT RawMaterials, M2i – Minerals &amp; Metals Intelligence Platform (platform page): 2.5 million data points; Power BI report in the browser; five-digit emailed login code; partner-only access with 5, 3 and 1 accounts by tier; CRMA Tracker; user groups; training webinars. <a href="https://eitrawmaterials.eu/m2i-minerals-metals-intelligence-platform">eitrawmaterials.eu/m2i-minerals-metals-intelligence-platform</a></li>
+    <li>EIT RawMaterials GmbH, Terms and Conditions “M2 Intelligence Platform” (Pilot Phase), 13 May 2026: pilot to 31 December 2027 with six-month extensions; purpose of validating the data model; areas Region, Trade, Commodity, Industry; no API, search, alerts or uploads; the three content tiers and the Battery dashboards as restricted-use; downloadable Region tables; right to correct, replace or remove content; no claim to historical time series. <a href="https://eitrawmaterials.eu/sites/default/files/2026-05/Terms%20and%20Conditions%20M2IP%281727953.1%29.pdf">Terms and Conditions PDF</a></li>
+    <li>EIT RawMaterials, Request for Proposals, Data Analyst (m/f/d) Freelancer/B2B, published 21 August 2026: scope, deliverable categories, Power BI and Microsoft Fabric, 2,000-hour ceiling, monthly planning. <a href="https://eitrawmaterialsgmbh.teamtailor.com/jobs/8234691-data-analyst-m-f-d-freelancer-b2b">RFP posting</a></li>
+    <li>EIT RawMaterials, Project Officer, Critical Raw Materials (m/f/d), July 2026: the officer contributes to data integration and maintenance within the Intelligence Platform and supports the Innovation Team on M2i. <a href="https://eitrawmaterialsgmbh.teamtailor.com/jobs/7984571-project-officer-critical-raw-materials-m-f-d">Job posting</a></li>
+    <li>Regulation (EU) 2024/1252 (Critical Raw Materials Act), Article 5: 2030 benchmarks of 10% extraction, 40% processing, 25% recycling of annual EU consumption of strategic raw materials, and no more than 65% from a single third country. <a href="https://eur-lex.europa.eu/eli/reg/2024/1252/oj">EUR-Lex</a></li>
+    <li>Candidate public feeds in the register: Eurostat data access (<a href="https://ec.europa.eu/eurostat/web/user-guides/data-browser/api-data-access">API guide</a>); USGS Mineral Commodity Summaries (<a href="https://www.usgs.gov/centers/national-minerals-information-center/mineral-commodity-summaries">usgs.gov</a>); World Bank Commodity Markets (<a href="https://www.worldbank.org/en/research/commodity-markets">worldbank.org</a>); ECB Data Portal (<a href="https://data.ecb.europa.eu/">data.ecb.europa.eu</a>); JRC Raw Materials Information System (<a href="https://rmis.jrc.ec.europa.eu/">rmis.jrc.ec.europa.eu</a>).</li>
+    <li>Geopolitical risk index: Caldara, D. and Iacoviello, M., “Measuring Geopolitical Risk”, American Economic Review 2022; monthly GPR index published at <a href="https://www.matteoiacoviello.com/gpr.htm">matteoiacoviello.com/gpr.htm</a>.</li>
+    <li>Events in the geopolitical panel, as published by the issuing authorities: Indonesia Ministry of Energy and Mineral Resources, nickel ore export ban effective 1 January 2020; EU Council sanctions packages from 23 February 2022; LME notice suspending nickel trading, 8 March 2022; China Ministry of Commerce and General Administration of Customs Announcement No. 23 of 2023 (gallium, germanium; effective 1 August 2023) and Announcement No. 39 of 2023 (graphite; effective 1 December 2023); DRC ARECOMS decision suspending cobalt exports, 22 February 2025; China MOFCOM/GACC Announcement No. 18 of 2025 (seven rare earth elements; 4 April 2025).</li>
+    <li>Microsoft, Fabric Analytics Engineer Associate (DP-600) certification page. <a href="https://learn.microsoft.com/en-us/credentials/certifications/fabric-analytics-engineer-associate/">learn.microsoft.com</a></li>
+    <li>EIT RawMaterials, M2i Platform webinar on battery materials, 17 September 2026 (attended): the roadmap for the last quarter of 2026 and early 2027; the partner training calendar; battery demand shown in gigawatt-hours of vehicles manufactured in Europe, by cathode material, anode material, cell format and electrolyte; the stated aims of the battery materials work. Described in words only; no platform figures or screenshots are reproduced.</li>
+  </ol>
+</details></section>
+
+<section class="app deep"><details class="deeper"><summary><h2>Appendix B: assumptions to confirm</h2><span class="hint">deeper</span></summary>
+  <p>Each of these is checked in week one. Where one turns out wrong, the plan changes; the rules do not.</p>
+  <ul>
+    <li>The webinar of 17 September presented the platform areas as Trade, Production, Commodity and Sector; the terms of 13 May list Region, Trade, Commodity and Industry. Which naming is current, and whether the downloadable Region tables still sit in an area of their own, decides whether Region remains the first candidate for weeks five to eight.</li>
+    <li>The terms name the Battery dashboards in Industry as restricted-use content; the webinar announced a Battery dashboard for the last quarter of 2026. Whether that is a first release or a new version of existing pages is a week-one question. The licence obligations apply either way.</li>
+    <li>The Fabric backend follows a Bronze / Silver / Gold lakehouse layering. The RFP refers to Gold-layer structures, which implies it, but the actual layering is not published.</li>
+    <li>Usage data exists well enough to identify the five most-used pages. It may not: usage monitoring is itself a deliverable, in which case the first five are chosen with the Innovation Team.</li>
+    <li>The public feeds in the register are candidates, not confirmed sources. Which of them M2i already harmonises into its derived-data tier is not stated anywhere public.</li>
+    <li>The restricted-use Battery dashboards are fed by a commercial data provider under licence. The provider is not named; the T&amp;Cs only define the tier.</li>
+    <li>The contractor works day to day with the Innovation Team and a Project Officer for Critical Raw Materials, on the strength of the two postings, rather than with a dedicated data-engineering team.</li>
+    <li>Reconciliation of derived data back to the public original is possible, meaning the harmonisation steps are recorded somewhere. If they are not, recording them becomes the first documentation deliverable.</li>
+    <li>The dashboard and refresh figures on this page are illustrative. The 20-minute refresh target, the commodity values and the CRMA shares are placeholders shaped to look like the real thing; none is a claim about M2i.</li>
+    <li>The geopolitical panel’s two index series are approximations shaped to published monthly levels, credited to Mirzak Analytics as analysis method, not as data. Replacing them with the LME Index (or S&amp;P GSCI Industrial Metals) and GPR exports is a pre-publication step; the correlations on the page will change when it happens.</li>
+    <li>The demand simulator’s base of 2.4 million EU EV sales in 2025, the 65 kWh pack and 0.85 kg LCE per kWh are round illustrative starting values, not sourced figures.</li>
+    <li>The Trade, Region and Industry dashboard tiles use invented partner shares, HHI levels, import values and capacity figures shaped to be plausible; none is a published statistic.</li>
+    <li>The Microsoft DP-600 line is a commitment to sit the exam by 30 November 2026, not a claim to hold the certification now.</li>
+  </ul>
+</details></section>
+
+<section class="app deep"><details class="deeper"><summary><h2>Appendix C: glossary</h2><span class="hint">deeper</span></summary>
+  <p>Terms marked with a dotted underline anywhere on this page can be tapped for the same definition.</p>
+  <div class="gloss" id="gloss"></div>
+</details></section>
+<section class="app deep"><details class="deeper"><summary><h2>Appendix D: what the 17 September webinar added</h2><span class="hint">deeper</span></summary>
+  <p>I attended the M2i Platform webinar on battery materials on 17 September 2026. Three things from it are now in this note. Nothing else changed.</p>
+  <ul>
+    <li><b>The roadmap.</b> The Battery dashboard and additions for copper, iron ore, steel and tungsten were announced for the last quarter of 2026, with aluminium and vanadium possible in early 2027 depending on partner feedback. Onboarding a commodity is therefore recurring work, so the month-three panel now names the gate each one passes.</li>
+    <li><b>The training calendar.</b> Partner trainings were announced for lithium (20 November), nickel (14 December), graphite (26 January), tungsten (4 March) and rare earths (14 April). The week-three measure basis register follows that order, so each page has its bases stated before partners are walked through it.</li>
+    <li><b>How battery demand is held.</b> Demand was shown in gigawatt-hours of vehicles manufactured in Europe, cut by cathode material, anode material, cell format and electrolyte. Getting from there to tonnes of lithium, nickel or cobalt needs a material intensity per chemistry, so the scenario table holds that factor as a row per chemistry, and operating capacity is kept apart from announced capacity.</li>
+  </ul>
+  <p>No platform figures or screenshots from the webinar are reproduced anywhere in this note. The two questions it raised are the first two entries in Appendix B.</p>
+</details></section>
+<div class="pop" id="pop" role="tooltip"></div>
+
+<footer>Platform facts are taken from eitrawmaterials.eu/m2i-minerals-metals-intelligence-platform and the Terms and Conditions “M2 Intelligence Platform” (Pilot Phase) dated 13 May 2026, and the M2i Platform webinar of 17 September 2026; the dashboard figures are illustrative. The two-page PDF version of this note is included in the proposal as required; the exit criteria above are proposed for agreement in month one and are not yet agreed with EIT RawMaterials. Liz Barnes, Special Dimension, Amsterdam. liz@specialdimension.nl</footer>
+</div>
+
+<script>
+(function(){
+
+  // timeline
+  var TL=[
+    '<div class="rulebar">Rule: no changes to production in weeks one to four other than a documented emergency fix.</div><p><b>Inventory.</b> Every semantic model, dataset, report page, pipeline, refresh schedule, workspace and owner, and who actually consumes each page. Output: one register that did not exist before, or a corrected version of the one that did. I also sit in the first monthly planning and start the definition of a finished deliverable.</p>',
+    '<div class="rulebar">Rule: the data tier travels with the data.</div><p><b>Lineage.</b> Source to lakehouse layer to semantic model to report, drawn out for the five most-used pages first, then the rest. Every dataset tagged proprietary, restricted-use or derived; the tier decides who may see it and whether it may be exported. Refresh history collected alongside: failures, durations, manual interventions, anything that only works because someone remembers to do it.</p>',
+    '<div class="rulebar">Rule: every figure that matters is recomputed once, independently.</div><p><b>Reconciliation.</b> The headline figures on those five pages recomputed from source, independently of the existing logic. Before a figure is recomputed its basis goes into a measure basis register: value-chain stage, unit and what it is a tonne of, scope, period, source. The register is built commodity by commodity in the order of the announced partner trainings, lithium on 20 November first, so each page has its bases stated before partners are walked through it. For derived data that means going back to the public original; for the CRMA Tracker it means re-deriving the benchmark from the production series. Differences go on a list with a materiality rating. Nothing is fixed yet; the list is the deliverable.</p>',
+    '<div class="rulebar">Rule: monthly planning names outputs, not hours.</div><p><b>Documentation gap list.</b> What exists, what is out of date, and what is only in someone\u2019s head, measured against the RFP\u2019s own list: source data, assumptions, transformation logic, model design, quality checks, dashboard configuration, known limitations. Agreed with the Innovation Team: what a finished deliverable looks like, its acceptance check, and where the evidence is filed. Settling that in month one makes every later time sheet easy to review.</p>',
+    '<div class="rulebar">Rule: pick the item whose before and after can be measured, not the most impressive one.</div><p>The natural first candidate is the Region area: its downloadable tables are built only from public data, so they can be reconciled to the original source with no licensing question in the way. One table re-issued with documented checks and a filed comparison, or one refresh problem removed with timing evidence, or one calculation moved out of a report into the model. The point is to establish the working rhythm and the evidence standard before anything ambitious is attempted.</p>',
+    '<div class="rulebar">Rule: ambition sits on top of a register, a lineage map and a reconciled baseline, never instead of them.</div><p>The six deliverable areas in the RFP, planned month by month as implemented things with acceptance checks. Two have a shape already visible from outside. The multi-tenant architecture, authentication and usage-monitoring deliverable is the pilot-to-regular-operation transition: the emailed login code and flat partner-tier account limits are what gets replaced, and usage metrics are what the pilot exists to collect. The Gold-layer fact tables for trade, production and commodities are the four platform areas restated as a data model. The rest follow the same pattern: sources integrated with reconciliation evidence, logic migrated from Power BI into Fabric under the comparison rule, governance written down, new commodities onboarded. Onboarding is the recurring job: the Battery dashboard and additions for copper, iron ore, steel and tungsten are announced for the last quarter of 2026, with aluminium and vanadium possible after that. Each passes the same release gate, with two additions: a measure basis row for every measure, and a source-precedence rule wherever two sources cover one figure.</p>',
+    '<div class="rulebar">Not a promise. A question for EIT RawMaterials, with the answer made short.</div>'+'<p>One question for EIT RawMaterials rather than a promise from me: today there is no API access, and partners see only what the Power BI report shows them. If programmatic access is wanted once the pilot moves to regular operation, the data-tier tagging built in weeks one to four decides which tables are eligible on day one. Restricted-use content can never be served that way; derived public data and EIT’s own KPIs can. The decision is theirs; the tagging makes it a short one.</p>',
+    '<div class="rulebar">Rule: finished is a state the platform can be audited into, not a date on the contract.</div><p>By the scheduled end of the pilot, the exit criteria in the next section are met or each open one has a named reason and an owner. The last quarter of 2027 is reserved for closing them, not for new pages: a handover pack that a successor could run the platform from, the data-tier security tested against the partner tiers, the usage figures the pilot existed to collect, and a release process that has been used at least twice without me. If the pilot is extended, the same criteria apply to the extension; the date moves, the definition of finished does not.</p>'
+  ];
+  var tlb=document.querySelectorAll('.tl button'),tlp=document.getElementById('tlpanel');
+  function showTL(i){tlb.forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.t==i))});tlp.innerHTML=TL[i];}
+  tlb.forEach(function(b){b.addEventListener('click',function(){showTL(b.dataset.t)})});
+  showTL(0);
+
+  // lineage
+  var L=[
+    '<p><b>Sources.</b> Three tiers, each with a different question. Proprietary (ERMA, CRMA Tracker, EIT-calculated KPIs): who maintains it and where the calculation lives. Licensed third-party (the Battery dashboards): the contract terms, because they decide export, attribution and which users may see it. Derived public data: which original series, which harmonisation steps, and whether the original can still be reached for reconciliation.</p>',
+    '<p><b>Bronze and Silver.</b> Does the ingest run unattended, and what does it do when a source is late or malformed? Row counts source-to-Bronze and Bronze-to-Silver on the last five refreshes. Any cleansing step that silently drops rows goes on the list.</p>',
+    '<p><b>Gold.</b> Which fact tables exist, what grain each is at, and whether the same measure (a trade value, a production tonnage) is defined once or in three places. This is where the RFP’s “dedicated fact tables for trade, production, commodities” deliverable starts, and it starts with reading, not building. I have designed this layer before: the star schema for the trading risk data warehouse at Nuon (position, P&L, exposure and market-price facts on conformed commodity, delivery-period, counterparty and book dimensions), and the fact tables, views and API definitions for the loan loss provisioning system at ING, twice, in 2004 and for its replacement in 2014.</p>',
+    '<p><b>Semantic model.</b> Every measure listed with its DAX, its owner and where it is used. Row- and object-level security tested against the partner tiers and against restricted-use content: on this platform security is a licensing obligation, not a preference. Calculations that live here but belong in Gold are flagged for the migration deliverable, under the comparison rule.</p>',
+    '<p><b>Reports.</b> The five most-used dashboards identified from usage data, their headline figures recomputed from source, and the differences filed with a materiality rating. Refresh failures and manual workarounds recorded. Nothing changed yet.</p>'
+  ];
+  var nodes=document.querySelectorAll('.node'), out=document.getElementById('lineage-out');
+  function showL(i){nodes.forEach(function(n){n.setAttribute('aria-selected',String(n.dataset.l==i))}); out.innerHTML=L[i];}
+  nodes.forEach(function(n){n.addEventListener('click',function(){showL(n.dataset.l)})});
+  showL(0);
+
+
+
+  // feeds
+  var FEEDS=[
+    {n:'Eurostat Comext',c:'EU trade flows by CN8 product and partner country',cad:'Monthly, ~T+6 weeks',lic:'Open (EU reuse)',tier:'d',rec:'Comext bulk download, same period',ep:'SDMX 2.1 REST, dataset DS-045409, filtered by CN8 and reporter',keys:'reporter, partner, CN8 code, flow, period, value EUR, quantity kg',checks:'row count per period against bulk file; sum of value EUR per reporter; late-revision flag for the last three months',exp:41820,got:41210,unit:'rows'},
+    {n:'Eurostat production (PRODCOM)',c:'EU manufactured production by PRODCOM code',cad:'Annual, provisional then final',lic:'Open (EU reuse)',tier:'d',rec:'Eurostat data browser, same code and year',ep:'SDMX 2.1 REST, table DS-056120',keys:'reporter, PRODCOM code, year, production value, quantity',checks:'code list version matched to year; provisional versus final tagged; totals per reporter against browser',exp:3118,got:3118,unit:'rows'},
+    {n:'USGS Mineral Commodity Summaries',c:'World production, reserves and US trade by commodity',cad:'Annual, January',lic:'Public domain (US Gov)',rec:'Published PDF tables, same edition',tier:'d',ep:'CSV per commodity from the NMIC data release',keys:'commodity, country, year, production t, reserves t',checks:'country name harmonised to ISO; unit stated per commodity; edition year kept as a column',exp:2260,got:2260,unit:'rows'},
+    {n:'World Bank commodity prices',c:'Monthly prices for metals and minerals (the Pink Sheet)',cad:'Monthly, first week',lic:'CC BY 4.0',tier:'d',rec:'Pink Sheet xlsx, same release date',ep:'Published xlsx, one sheet per frequency',keys:'series, month, price USD, unit',checks:'series count unchanged; last twelve months unchanged unless flagged as revised',exp:18,got:18,unit:'series'},
+    {n:'ECB exchange rates',c:'Daily EUR reference rates, needed for any USD-priced series',cad:'Daily, 16:00 CET',lic:'Open (ECB terms)',tier:'d',rec:'ECB Data Portal, same date',ep:'SDMX REST, dataflow EXR, USD/EUR daily',keys:'date, currency, rate',checks:'one row per business day; gap check against TARGET calendar',exp:22,got:22,unit:'days'},
+    {n:'JRC RMIS',c:'EU critical raw materials assessment: supply risk, economic importance',cad:'Every three years (2023 list)',lic:'Open (EU reuse)',tier:'d',rec:'Published assessment tables',ep:'Downloaded tables, no API',keys:'material, supply risk, economic importance, assessment year',checks:'material list matched to the platform commodity master; assessment year kept',exp:70,got:70,unit:'materials'},
+    {n:'Licensed battery-materials feed',c:'Whatever sits behind the Industry / Battery dashboards',cad:'Per contract',lic:'Commercial, restricted-use',tier:'r',rec:'Provider portal, same extract',ep:'Per contract; reviewed with the licence before any change',keys:'per contract',checks:'contract terms on export, attribution and user scope recorded on the dataset before it is touched',exp:null,got:null,unit:''}
+  ];
+  var TIER={d:'Derived (public)',r:'Restricted-use',p:'Proprietary'};
+  var fch=document.getElementById('feedchips'),ct=document.getElementById('contract'),pb=document.getElementById('pullbox');
+  function showFeed(i){
+    Array.prototype.forEach.call(fch.children,function(b,j){b.setAttribute('aria-pressed',String(i===j));b.setAttribute('aria-selected',String(i===j))});
+    var f=FEEDS[i];
+    var pull='';
+    if(f.exp!==null){var d=f.got-f.exp;var ok=d===0;
+      pull='<div class="pull"><div><div class="v">'+f.exp.toLocaleString('en-GB')+'</div><div class="k">'+f.unit+' expected</div></div><div><div class="v">'+f.got.toLocaleString('en-GB')+'</div><div class="k">'+f.unit+' received</div></div><div><div class="v" style="color:'+(ok?'var(--moss)':'var(--brick)')+'">'+(ok?'0':d)+'</div><div class="k">difference</div></div><div><div class="v" style="color:'+(ok?'var(--moss)':'var(--brick)')+'">'+(ok?'Accepted':'Held')+'</div><div class="k">'+(ok?'filed as evidence':'a person clears this')+'</div></div></div>'+(ok?'<p class="fine">Row count and checksum match the source extract; the pull is filed as evidence and the dataset may load.</p>':'<p class="fine">Short by '+(-d)+' rows: the latest period is incomplete at source. Held until the next release, not padded, not silently loaded.</p>');
+    } else { pull='<p class="fine">No sample pull. Nothing on a restricted-use feed is pulled until the contract has been read and the usage terms recorded on the dataset.</p>'; }
+    ct.innerHTML='<h3>Intake contract: '+f.n+'</h3><dl><dt>Covers</dt><dd>'+f.c+'</dd><dt>Endpoint</dt><dd>'+f.ep+'</dd><dt>Key fields</dt><dd>'+f.keys+'</dd><dt>Cadence</dt><dd>'+f.cad+'</dd><dt>Licence</dt><dd>'+f.lic+'</dd><dt>Lands in</dt><dd><span class="tier '+f.tier+'">'+TIER[f.tier]+'</span></dd><dt>Checks before load</dt><dd>'+f.checks+'</dd><dt>Reconciles to</dt><dd>'+f.rec+'</dd></dl>';
+    pb.innerHTML='<h3>First-pull check: '+f.n+'</h3>'+pull;
+  }
+  FEEDS.forEach(function(f,i){var b=document.createElement('button');b.className='chip';b.setAttribute('role','tab');b.setAttribute('aria-pressed','false');b.textContent=f.n;b.addEventListener('click',function(){showFeed(i)});fch.appendChild(b)});
+  showFeed(0);
+
+  // dashboard
+  var C=[
+    {n:'Lithium',g:'battery',rel:79,sr:4.1,ei:5.9,vol:312},
+    {n:'Cobalt',g:'battery',rel:81,sr:3.8,ei:6.2,vol:89},
+    {n:'Nickel',g:'battery',rel:56,sr:1.9,ei:6.4,vol:1205},
+    {n:'Graphite',g:'battery',rel:98,sr:3.4,ei:4.5,vol:426},
+    {n:'Manganese',g:'battery',rel:94,sr:2.6,ei:5.1,vol:2150},
+    {n:'Rare earths',g:'magnet',rel:99,sr:5.2,ei:5.3,vol:19},
+    {n:'Boron',g:'magnet',rel:100,sr:3.6,ei:3.9,vol:210},
+    {n:'Gallium',g:'magnet',rel:71,sr:4.6,ei:3.7,vol:1},
+    {n:'Copper',g:'base',rel:44,sr:1.1,ei:7.1,vol:3891},
+    {n:'Aluminium',g:'base',rel:58,sr:1.4,ei:7.6,vol:6420},
+    {n:'Zinc',g:'base',rel:31,sr:0.9,ei:5.6,vol:1130},
+    {n:'Tin',g:'base',rel:83,sr:2.7,ei:3.2,vol:68}
+  ];
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var idx={battery:[100,97,94,96,101,104,103,108,112,110,115,118],magnet:[100,103,109,114,112,118,121,119,126,131,129,134],base:[100,101,103,102,105,104,107,106,105,108,110,109]};
+  idx.all=idx.battery.map(function(v,i){return Math.round((v+idx.magnet[i]+idx.base[i])/3)});
+  var crma={all:{ex:3.4,pr:16,re:11},battery:{ex:1.2,pr:9,re:6},magnet:{ex:0.3,pr:4,re:2},base:{ex:6.1,pr:28,re:19}};
+  var refresh=[14,15,13,16,14,15,31,14,13,15,14,0,15,16,14,13,15,14,29,14,15,13,14,16,0,15,14,13,15,14];
+  var tip=document.getElementById('tip');
+  function showTip(e,t){tip.style.display='block';tip.innerHTML=t;tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY+12)+'px'}
+  function hideTip(){tip.style.display='none'}
+  function svgEl(t,a){var el=document.createElementNS('http://www.w3.org/2000/svg',t);for(var k in a)el.setAttribute(k,a[k]);return el}
+  function bind(el,txt){el.addEventListener('mousemove',function(e){showTip(e,txt)});el.addEventListener('mouseleave',hideTip)}
+  function relClass(r){return r>80?'hi':(r>=50?'mid':'')}
+
+  function drawDash(g){
+    var d=C.filter(function(c){return g==='all'||c.g===g});
+    // KPIs
+    var open=d.filter(function(c){return c.rel>80&&c.sr>3}).length;
+    var vol=d.reduce(function(a,c){return a+c.vol},0);
+    document.getElementById('kpis').innerHTML=
+      '<div class="kpi"><div class="v">'+d.length+'</div><div class="k">commodities in view</div></div>'+
+      '<div class="kpi"><div class="v">'+vol.toLocaleString('en-GB')+'</div><div class="k">kt imported, 2025</div></div>'+
+      '<div class="kpi warn"><div class="v">'+open+'</div><div class="k">on the watch list</div></div>'+
+      '<div class="kpi good"><div class="v">'+d.length+' of '+d.length+'</div><div class="k">rows reconciled to source</div></div>';
+    // bars
+    var b=document.getElementById('bars');b.innerHTML='';
+    var sorted=d.slice().sort(function(x,y){return y.rel-x.rel});
+    var rowH=Math.min(18,190/sorted.length),top=8,left=78,w=290;
+    [0,25,50,75,100].forEach(function(t){var x=left+w*t/100;b.appendChild(svgEl('line',{x1:x,x2:x,y1:top,y2:top+rowH*sorted.length,'class':'grid'}));var tx=svgEl('text',{x:x,y:top+rowH*sorted.length+14,'text-anchor':'middle'});tx.textContent=t+'%';b.appendChild(tx)});
+    sorted.forEach(function(c,i){
+      var y=top+i*rowH;
+      var t=svgEl('text',{x:left-6,y:y+rowH*.72,'text-anchor':'end','class':'lbl'});t.textContent=c.n;b.appendChild(t);
+      var r=svgEl('rect',{x:left,y:y+2,width:w*c.rel/100,height:rowH-4,'class':'bar '+relClass(c.rel)});bind(r,c.n+': '+c.rel+'% imported');b.appendChild(r);
+    });
+    // scatter
+    var sc=document.getElementById('scatter');sc.innerHTML='';
+    var L=40,T=12,W=345,H=180;
+    var sx=function(v){return L+W*(v/8)},sy=function(v){return T+H-H*(v/6)};
+    sc.appendChild(svgEl('rect',{x:sx(4),y:T,width:sx(8)-sx(4),height:sy(3)-T,'class':'quad'}));
+    sc.appendChild(svgEl('line',{x1:L,x2:L+W,y1:T+H,y2:T+H,'class':'axis'}));sc.appendChild(svgEl('line',{x1:L,x2:L,y1:T,y2:T+H,'class':'axis'}));
+    var ax=svgEl('text',{x:L+W/2,y:T+H+22,'text-anchor':'middle'});ax.textContent='economic importance (0 to 8)';sc.appendChild(ax);
+    var ay=svgEl('text',{x:12,y:T+H/2,'text-anchor':'middle',transform:'rotate(-90 12 '+(T+H/2)+')'});ay.textContent='supply risk (0 to 6)';sc.appendChild(ay);
+    d.forEach(function(c){var r=svgEl('circle',{cx:sx(c.ei),cy:sy(c.sr),r:4+Math.sqrt(c.vol)/8,'class':'dot '+(c.sr>3?'hi':(c.sr>2?'mid':''))});bind(r,c.n+'<br>supply risk '+c.sr+', importance '+c.ei+'<br>'+c.vol.toLocaleString('en-GB')+' kt');sc.appendChild(r);if(c.sr>3||d.length<=5){var lt=svgEl('text',{x:sx(c.ei)+6+Math.sqrt(c.vol)/8,y:sy(c.sr)+4,'class':'lbl'});lt.textContent=c.n;sc.appendChild(lt)}});
+    // lines
+    var ln=document.getElementById('lines');ln.innerHTML='';
+    var L2=36,T2=10,W2=350,H2=150,lo=90,hi=140;
+    var lx=function(i){return L2+W2*i/11},ly=function(v){return T2+H2-H2*(v-lo)/(hi-lo)};
+    [100,110,120,130].forEach(function(v){ln.appendChild(svgEl('line',{x1:L2,x2:L2+W2,y1:ly(v),y2:ly(v),'class':'grid'}));var t=svgEl('text',{x:L2-5,y:ly(v)+4,'text-anchor':'end'});t.textContent=v;ln.appendChild(t)});
+    months.forEach(function(m,i){if(i%2===0){var t=svgEl('text',{x:lx(i),y:T2+H2+16,'text-anchor':'middle'});t.textContent=m;ln.appendChild(t)}});
+    function path(arr){return arr.map(function(v,i){return (i?'L':'M')+lx(i)+' '+ly(v)}).join(' ')}
+    ln.appendChild(svgEl('path',{d:path(idx.all),'class':'line b'}));
+    var sel=idx[g]||idx.all; ln.appendChild(svgEl('path',{d:path(sel),'class':'line'}));
+    sel.forEach(function(v,i){var c=svgEl('circle',{cx:lx(i),cy:ly(v),r:5,fill:'transparent'});bind(c,months[i]+' 2025: '+v+' (all: '+idx.all[i]+')');ln.appendChild(c)});
+    // refresh
+    var rf=document.getElementById('refresh');rf.innerHTML='';
+    var L3=36,T3=10,W3=350,H3=150,bw=W3/30;
+    [0,10,20,30].forEach(function(v){var y=T3+H3-H3*v/35;rf.appendChild(svgEl('line',{x1:L3,x2:L3+W3,y1:y,y2:y,'class':'grid'}));var t=svgEl('text',{x:L3-5,y:y+4,'text-anchor':'end'});t.textContent=v;rf.appendChild(t)});
+    var tgt=T3+H3-H3*20/35; rf.appendChild(svgEl('line',{x1:L3,x2:L3+W3,y1:tgt,y2:tgt,stroke:'var(--brick)','stroke-width':1,'stroke-dasharray':'4 3'}));
+    var tl=svgEl('text',{x:L3+W3,y:tgt-4,'text-anchor':'end'});tl.textContent='target 20 min';rf.appendChild(tl);
+    refresh.forEach(function(m,i){var fail=m===0,h=fail?H3:H3*m/35;var r=svgEl('rect',{x:L3+i*bw+1,y:T3+H3-h,width:bw-2,height:h,'class':'rf '+(fail?'fail':(m>20?'slow':'')),'fill-opacity':fail?0.35:1});bind(r,'Day '+(i+1)+': '+(fail?'refresh failed, manual rerun':m+' min'));rf.appendChild(r)});
+    var xt=svgEl('text',{x:L3+W3/2,y:T3+H3+16,'text-anchor':'middle'});xt.textContent='2 failures, 2 slow runs, 26 within target';rf.appendChild(xt);
+
+    // crma
+    var cr=document.getElementById('crma');cr.innerHTML='';
+    var g2=crma[g]||crma.all, stages=[['Extraction',g2.ex,10],['Processing',g2.pr,40],['Recycling',g2.re,25]];
+    var cw=330,cl=12;
+    stages.forEach(function(st,i){
+      var rowY=18+i*90,x0=cl;
+      var t=svgEl('text',{x:x0,y:rowY-4,'class':'lbl'});t.textContent=st[0];cr.appendChild(t);
+      cr.appendChild(svgEl('rect',{x:x0,y:rowY,width:cw,height:22,fill:'var(--paper)',stroke:'var(--line)'}));
+      var r=svgEl('rect',{x:x0,y:rowY,width:cw*Math.min(st[1],50)/50,height:22,'class':'bar'});bind(r,st[0]+': '+st[1]+'% of EU consumption, benchmark '+st[2]+'%');cr.appendChild(r);
+      var bx=x0+cw*st[2]/50; cr.appendChild(svgEl('line',{x1:bx,x2:bx,y1:rowY-4,y2:rowY+26,stroke:'var(--brick)','stroke-width':2}));
+      var v=svgEl('text',{x:x0,y:rowY+40,'class':'lbl'});v.textContent=st[1]+'% now, '+st[2]+'% by 2030, gap '+(st[2]-st[1]).toFixed(1)+' points';cr.appendChild(v);
+      [0,25,50].forEach(function(tk){var tx=svgEl('text',{x:x0+cw*tk/50,y:rowY+56,'text-anchor':tk===0?'start':(tk===50?'end':'middle')});tx.textContent=tk+'%';cr.appendChild(tx)});
+    });
+    drawTrade(g); drawRegion(g); drawIndustry(g);
+  }
+
+  // trade, region, industry tiles
+  var PART={all:[['China',31],['Chile',9],['Russia',8],['South Africa',7],['Norway',6],['Indonesia',5],['Other',34]],battery:[['China',43],['Chile',14],['Indonesia',11],['DR Congo',9],['Australia',6],['Other',17]],magnet:[['China',72],['Malaysia',7],['Japan',4],['USA',4],['Other',13]],base:[['Chile',18],['Russia',15],['Norway',12],['Peru',9],['China',8],['Other',38]]};
+  var REG={all:[['Asia',44],['Americas',20],['Europe non-EU',19],['Africa',12],['Oceania',5]],battery:[['Asia',56],['Americas',20],['Africa',13],['Oceania',7],['Europe non-EU',4]],magnet:[['Asia',84],['Americas',6],['Europe non-EU',5],['Africa',3],['Oceania',2]],base:[['Americas',31],['Europe non-EU',29],['Asia',22],['Africa',12],['Oceania',6]]};
+  var HHI={all:[1310,1350,1420,1480,1510,1590,1640,1620,1700,1760,1790,1830],battery:[2210,2260,2320,2400,2470,2510,2580,2640,2700,2760,2810,2860],magnet:[5100,5150,5230,5300,5360,5420,5450,5500,5560,5610,5650,5700],base:[900,910,930,940,960,970,990,1000,1010,1020,1040,1050]};
+  var TR={all:{imp:[5.1,4.9,5.4,5.2,5.6,5.5,5.8,5.4,5.7,5.9,6.0,5.8],exp:[2.4,2.3,2.6,2.5,2.6,2.7,2.7,2.6,2.8,2.8,2.9,2.8]},battery:{imp:[1.6,1.5,1.7,1.7,1.8,1.9,2.0,1.8,1.9,2.1,2.1,2.0],exp:[0.3,0.3,0.3,0.3,0.4,0.4,0.4,0.4,0.4,0.4,0.5,0.4]},magnet:{imp:[0.21,0.2,0.22,0.24,0.25,0.26,0.29,0.31,0.3,0.33,0.34,0.32],exp:[0.05,0.05,0.05,0.06,0.06,0.06,0.06,0.06,0.07,0.07,0.07,0.07]},base:{imp:[3.3,3.2,3.5,3.3,3.6,3.4,3.5,3.3,3.5,3.5,3.6,3.5],exp:[2.0,1.9,2.2,2.1,2.2,2.2,2.2,2.1,2.3,2.3,2.3,2.3]}};
+  var SINGLE={all:[['Rare earths','China',98],['Gallium','China',71],['Graphite','China',68],['Boron','Turkey',66],['Cobalt','DR Congo',63],['Lithium','Chile',58],['Manganese','South Africa',41],['Nickel','Russia',34],['Copper','Chile',27]],battery:[['Graphite','China',68],['Cobalt','DR Congo',63],['Lithium','Chile',58],['Manganese','South Africa',41],['Nickel','Russia',34]],magnet:[['Rare earths','China',98],['Gallium','China',71],['Boron','Turkey',66]],base:[['Nickel','Russia',34],['Copper','Chile',27],['Aluminium','Norway',25],['Zinc','Peru',22],['Tin','Indonesia',44]]};
+  var BAT={demand:[180,240,320,400,480,560],cap:[150,260,390,520,640,720],yrs:['2025','2026','2027','2028','2029','2030']};
+  var CHAIN={all:{Extraction:0.3,Processing:0.5,Manufacturing:0.8,Recycling:0.4},battery:{Extraction:0.1,Processing:0.3,Manufacturing:0.7,Recycling:0.3},magnet:{Extraction:0,Processing:0.1,Manufacturing:0.5,Recycling:0.1},base:{Extraction:0.5,Processing:0.7,Manufacturing:0.9,Recycling:0.6}};
+  function hbars(svgId,data,max,cls,fmt,labelW){
+    var sv=document.getElementById(svgId);sv.innerHTML='';var rowH=Math.min(30,200/data.length),top=8,left=labelW||90,w=380-left;
+    data.forEach(function(d,i){var y=top+i*rowH;var t=svgEl('text',{x:left-6,y:y+rowH*.7,'text-anchor':'end','class':'lbl'});t.textContent=d[0];sv.appendChild(t);
+      var r=svgEl('rect',{x:left,y:y+2,width:w*d[1]/max,height:rowH-4,'class':'bar '+(cls?cls(d):'')});bind(r,fmt(d));sv.appendChild(r);});
+    return {top:top,rowH:rowH,left:left,w:w,n:data.length,sv:sv};
+  }
+  function drawTrade(g){
+    hbars('partners',PART[g]||PART.all,100,function(d){return d[0]==='Other'?'x':(d[1]>50?'hi':(d[1]>25?'mid':''))},function(d){return d[0]+': '+d[1]+'% of import value'});
+    var h=document.getElementById('hhi');h.innerHTML='';var L=44,T=12,W=340,H=170,ser=HHI[g]||HHI.all;
+    var lx=function(i){return L+W*i/11},ly=function(v){return T+H-H*v/6000};
+    [0,2500,5000].forEach(function(v){h.appendChild(svgEl('line',{x1:L,x2:L+W,y1:ly(v),y2:ly(v),'class':v===2500?'ceiling':'grid'}));var t=svgEl('text',{x:L-5,y:ly(v)+4,'text-anchor':'end'});t.textContent=v;h.appendChild(t)});
+    var tl=svgEl('text',{x:L+W,y:ly(2500)-4,'text-anchor':'end'});tl.textContent='concentrated above 2,500';h.appendChild(tl);
+    months.forEach(function(m,i){if(i%2===0){var t=svgEl('text',{x:lx(i),y:T+H+16,'text-anchor':'middle'});t.textContent=m;h.appendChild(t)}});
+    h.appendChild(svgEl('path',{d:ser.map(function(v,i){return (i?'L':'M')+lx(i)+' '+ly(v)}).join(' '),'class':'line'}));
+    ser.forEach(function(v,i){var c=svgEl('circle',{cx:lx(i),cy:ly(v),r:5,fill:'transparent'});bind(c,months[i]+' 2025: HHI '+v.toLocaleString('en-GB'));h.appendChild(c)});
+    var t2=document.getElementById('tradeline');t2.innerHTML='';var L2=40,T2=10,W2=780,H2=150,tr=TR[g]||TR.all,mx=Math.max.apply(null,tr.imp)*1.15;
+    var x2=function(i){return L2+W2*i/11},y2=function(v){return T2+H2-H2*v/mx};
+    var area='M'+x2(0)+' '+y2(tr.exp[0])+tr.imp.map(function(v,i){return ' L'+x2(i)+' '+y2(v)}).join('')+tr.exp.slice().reverse().map(function(v,i){return ' L'+x2(11-i)+' '+y2(v)}).join('')+' Z';
+    t2.appendChild(svgEl('path',{d:area,'class':'area'}));
+    [0.25,0.5,0.75,1].forEach(function(f){var v=+(mx*f).toFixed(1);t2.appendChild(svgEl('line',{x1:L2,x2:L2+W2,y1:y2(v),y2:y2(v),'class':'grid'}));var t=svgEl('text',{x:L2-5,y:y2(v)+4,'text-anchor':'end'});t.textContent=v;t2.appendChild(t)});
+    months.forEach(function(m,i){var t=svgEl('text',{x:x2(i),y:T2+H2+16,'text-anchor':'middle'});t.textContent=m;t2.appendChild(t)});
+    t2.appendChild(svgEl('path',{d:tr.imp.map(function(v,i){return (i?'L':'M')+x2(i)+' '+y2(v)}).join(' '),'class':'line'}));
+    t2.appendChild(svgEl('path',{d:tr.exp.map(function(v,i){return (i?'L':'M')+x2(i)+' '+y2(v)}).join(' '),'class':'line o'}));
+    tr.imp.forEach(function(v,i){var c=svgEl('circle',{cx:x2(i),cy:y2(v),r:6,fill:'transparent'});bind(c,months[i]+' 2025: imports \u20ac'+v+'bn, exports \u20ac'+tr.exp[i]+'bn, deficit \u20ac'+(v-tr.exp[i]).toFixed(1)+'bn');t2.appendChild(c)});
+  }
+  function drawRegion(g){
+    var d=SINGLE[g]||SINGLE.all;
+    var o=hbars('single',d.map(function(x){return [x[0],x[2],x[1]]}),100,function(x){return x[1]>65?'hi':(x[1]>50?'mid':'')},function(x){return x[0]+': '+x[1]+'% from '+x[2]},80);
+    var cx=o.left+o.w*0.65;o.sv.appendChild(svgEl('line',{x1:cx,x2:cx,y1:o.top-2,y2:o.top+o.rowH*o.n,'class':'ceiling'}));var t=svgEl('text',{x:cx,y:o.top+o.rowH*o.n+14,'text-anchor':'middle'});t.textContent='65% ceiling';o.sv.appendChild(t);
+    d.forEach(function(x,i){var lt=svgEl('text',{x:o.left+4,y:o.top+i*o.rowH+o.rowH*.7,fill:'#fff','font-size':'10'});lt.textContent=x[1];o.sv.appendChild(lt)});
+    hbars('regions',REG[g]||REG.all,100,function(x){return x[1]>50?'hi':(x[1]>30?'mid':'')},function(x){return x[0]+': '+x[1]+'% of imports'},110);
+  }
+  function drawIndustry(g){
+    var b=document.getElementById('battery');b.innerHTML='';var L=40,T=12,W=340,H=170,mx=800;
+    var lx=function(i){return L+W*i/5},ly=function(v){return T+H-H*v/mx};
+    [200,400,600,800].forEach(function(v){b.appendChild(svgEl('line',{x1:L,x2:L+W,y1:ly(v),y2:ly(v),'class':'grid'}));var t=svgEl('text',{x:L-5,y:ly(v)+4,'text-anchor':'end'});t.textContent=v;b.appendChild(t)});
+    BAT.yrs.forEach(function(y,i){var t=svgEl('text',{x:lx(i),y:T+H+16,'text-anchor':'middle'});t.textContent=y;b.appendChild(t)});
+    b.appendChild(svgEl('path',{d:BAT.cap.map(function(v,i){return (i?'L':'M')+lx(i)+' '+ly(v)}).join(' '),'class':'line b'}));
+    b.appendChild(svgEl('path',{d:BAT.demand.map(function(v,i){return (i?'L':'M')+lx(i)+' '+ly(v)}).join(' '),'class':'line'}));
+    BAT.yrs.forEach(function(y,i){var c=svgEl('circle',{cx:lx(i),cy:ly(BAT.demand[i]),r:6,fill:'transparent'});bind(c,y+': demand '+BAT.demand[i]+' GWh, announced capacity '+BAT.cap[i]+' GWh');b.appendChild(c)});
+    var ch=document.getElementById('chain');ch.innerHTML='';var st=CHAIN[g]||CHAIN.all,keys=Object.keys(st);
+    keys.forEach(function(k,i){var x=40+i*100,y=110,v=st[k];
+      ch.appendChild(svgEl('circle',{cx:x,cy:y,r:34,fill:'var(--paper)',stroke:'var(--line)'}));
+      if(v>0){var r=svgEl('circle',{cx:x,cy:y,r:34*Math.sqrt(v),'class':'dot '+(v<0.3?'hi':(v<0.6?'mid':''))});bind(r,k+': EU covers about '+Math.round(v*100)+'% of its own need');ch.appendChild(r)}else{var r0=svgEl('circle',{cx:x,cy:y,r:34,fill:'transparent'});bind(r0,k+': no EU capacity');ch.appendChild(r0)}
+      var t=svgEl('text',{x:x,y:y+56,'text-anchor':'middle','class':'lbl'});t.textContent=k;ch.appendChild(t);
+      if(i<keys.length-1)ch.appendChild(svgEl('line',{x1:x+36,x2:x+64,y1:y,y2:y,'class':'axis'}));
+    });
+  }
+  var dtabs=document.querySelectorAll('.dtab'),dpanels=document.querySelectorAll('.dpanel');
+  dtabs.forEach(function(t){t.addEventListener('click',function(){dtabs.forEach(function(x){x.setAttribute('aria-selected','false')});dpanels.forEach(function(p){p.classList.remove('on')});t.setAttribute('aria-selected','true');document.querySelector('.dpanel[data-d="'+t.dataset.d+'"]').classList.add('on')})});
+  var chk=document.getElementById('chk'),chkgate=document.getElementById('chkgate');
+  function gateState(){var boxes=chk.querySelectorAll('input'),off=[];boxes.forEach(function(b){if(!b.checked)off.push(b.parentNode.textContent.trim())});if(off.length){chkgate.className='gate blocked';chkgate.textContent='Publish: blocked. '+off.length+' control'+(off.length>1?'s':'')+' not met: '+off.join('; ')+'.'}else{chkgate.className='gate open';chkgate.textContent='Publish: open. All six controls met; evidence filed with the release.'}}
+  chk.addEventListener('change',gateState);gateState();
+
+  var chips=document.querySelectorAll('.chip');
+  chips.forEach(function(ch){ch.addEventListener('click',function(){chips.forEach(function(x){x.setAttribute('aria-pressed','false')});ch.setAttribute('aria-pressed','true');drawDash(ch.dataset.g)})});
+  drawDash('all');
+
+  // demo
+  var rows=[['Lithium',312.4,312.4],['Cobalt',88.9,88.9],['Nickel',1204.7,1204700],['Copper',3891.2,3891.2],['Graphite',426.0,426.0],['Rare earths',19.3,19.3]];
+  var tb=document.querySelector('#cmp tbody'), run=document.getElementById('run'), fix=document.getElementById('fix'), reset=document.getElementById('reset'), gate=document.getElementById('gate');
+  var fixed=false;
+  function fmt(n){return n.toLocaleString('en-GB',{minimumFractionDigits:1,maximumFractionDigits:1})}
+  function draw(compare){
+    tb.innerHTML='';var breaks=0;
+    rows.forEach(function(r){
+      var fab=(fixed&&r[0]==='Nickel')?r[1]:r[2];
+      var d=fab-r[1]; var tr=document.createElement('tr');
+      var cls=''; var dtxt='—';
+      if(compare){ if(Math.abs(d)>0.05){cls='break';breaks++;dtxt='+'+fmt(d)} else {cls='clean';dtxt='0.0'} }
+      tr.className=cls;
+      tr.innerHTML='<td>'+r[0]+'</td><td>'+fmt(r[1])+'</td><td>'+fmt(fab)+'</td><td class="diff">'+dtxt+'</td>';
+      tb.appendChild(tr);
+    });
+    if(!compare){gate.className='gate idle';gate.textContent='Retire the Power BI version: not yet assessed.';fix.disabled=true;}
+    else if(breaks>0){gate.className='gate blocked';gate.textContent='Retire the Power BI version: blocked. '+breaks+' row-level break found. The Power BI reference stays live until this reconciles.';fix.disabled=false;}
+    else{gate.className='gate open';gate.textContent='Retire the Power BI version: open. 6 of 6 rows reconcile. Comparison filed as acceptance evidence; the Fabric version becomes the reference.';fix.disabled=true;}
+  }
+  run.addEventListener('click',function(){draw(true)});
+  fix.addEventListener('click',function(){fixed=true;draw(true)});
+  reset.addEventListener('click',function(){fixed=false;draw(false)});
+  draw(false);
+
+
+  // simulator
+  var S=[['s1','v1',function(v){return v+'%'}],['s2','v2',function(v){return v}],['s3','v3',function(v){return (+v).toFixed(2)}],['s4','v4',function(v){return v+'%'}]];
+  function runSim(){
+    var g1=+document.getElementById('s1').value/100,kwh=+document.getElementById('s2').value,li=+document.getElementById('s3').value,rc=+document.getElementById('s4').value/100;
+    S.forEach(function(x){document.getElementById(x[1]).textContent=x[2](document.getElementById(x[0]).value)});
+    var base=2.4,yrs=[2025,2026,2027,2028,2029,2030],sales=yrs.map(function(y,i){return base*Math.pow(1+g1,i)});
+    var need=sales.map(function(sv){return sv*1e6*kwh*li/1e6}); // kt LCE
+    var net=need.map(function(n,i){return n*(1-rc*i/5)});
+    document.getElementById('o1').textContent=sales[5].toFixed(1);document.getElementById('o2').textContent=Math.round(need[5]).toLocaleString('en-GB');document.getElementById('o3').textContent=Math.round(need[5]-net[5]).toLocaleString('en-GB');document.getElementById('o4').textContent=Math.round(net[5]).toLocaleString('en-GB');
+    var sv=document.getElementById('simchart');sv.innerHTML='';var L=50,T=12,W=770,H=140,mx=Math.max(need[5],50)*1.1;
+    var lx=function(i){return L+W*i/5},ly=function(v){return T+H-H*v/mx};
+    [0.25,0.5,0.75,1].forEach(function(f){var v=Math.round(mx*f);sv.appendChild(svgEl('line',{x1:L,x2:L+W,y1:ly(v),y2:ly(v),'class':'grid'}));var t=svgEl('text',{x:L-6,y:ly(v)+4,'text-anchor':'end'});t.textContent=v.toLocaleString('en-GB');sv.appendChild(t)});
+    yrs.forEach(function(y,i){var t=svgEl('text',{x:lx(i),y:T+H+16,'text-anchor':'middle'});t.textContent=y;sv.appendChild(t)});
+    sv.appendChild(svgEl('path',{d:need.map(function(v,i){return (i?'L':'M')+lx(i)+' '+ly(v)}).join(' '),'class':'line'}));
+    sv.appendChild(svgEl('path',{d:net.map(function(v,i){return (i?'L':'M')+lx(i)+' '+ly(v)}).join(' '),'class':'line b'}));
+    var a=svgEl('text',{x:L+W,y:T+10,'text-anchor':'end','class':'lbl'});a.textContent='assumptions: growth '+Math.round(g1*100)+'%/yr, '+kwh+' kWh, '+li.toFixed(2)+' kg LCE/kWh, recycling '+Math.round(rc*100)+'% by 2030';sv.appendChild(a);
+    yrs.forEach(function(y,i){var c=svgEl('circle',{cx:lx(i),cy:ly(need[i]),r:6,fill:'transparent'});bind(c,y+': '+Math.round(need[i])+' kt LCE, '+Math.round(net[i])+' after recycling');sv.appendChild(c)});
+  }
+  S.forEach(function(x){document.getElementById(x[0]).addEventListener('input',runSim)});runSim();
+
+  // geopolitics (approximated series)
+  function seeded(n){var x=Math.sin(n*9301+49297)*233280;return x-Math.floor(x)}
+  var N=92, lab=[]; for(var i=0;i<N;i++){var yy=2019+Math.floor(i/12),mm=i%12;lab.push(yy+'-'+('0'+(mm+1)).slice(-2))}
+  var metals=[],gpr=[];
+  for(var i=0;i<N;i++){
+    var t=i/12; // years since Jan 2019
+    var m=100+8*Math.sin(t*1.3); if(t>=1.2&&t<1.5)m-=14*(1-Math.abs(t-1.35)/0.15); // covid dip
+    if(t>=1.5)m+=Math.min(t-1.5,1.5)*22; // 2020-22 rally
+    if(t>=3.1&&t<3.4)m+=28*(1-Math.abs(t-3.25)/0.15); // Mar 2022 spike
+    if(t>=3.4)m-=Math.min(t-3.4,1.2)*18; // 2022-23 fall
+    if(t>=4.6)m+=Math.min(t-4.6,2)*7; // mild 2024-26 recovery
+    m+=(seeded(i)-0.5)*5; metals.push(m);
+    var gv=100+10*Math.sin(t*2.1); if(t>=1.1&&t<1.6)gv+=25*(1-Math.abs(t-1.35)/0.25);
+    if(t>=3.1&&t<3.6)gv+=160*(1-Math.abs(t-3.2)/0.4); if(t>=3.6)gv+=45*Math.exp(-(t-3.6)*0.9);
+    if(t>=4.75&&t<5.1)gv+=70*(1-Math.abs(t-4.85)/0.3); if(t>=6.2&&t<6.7)gv+=55*(1-Math.abs(t-6.4)/0.35);
+    gv+=(seeded(i+500)-0.5)*14; gpr.push(gv);
+  }
+  var EV=[['2020-01','Indonesia bans nickel ore exports','nickel'],['2022-02','Russia invades Ukraine; sanctions follow','nickel, aluminium, palladium'],['2022-03','LME suspends nickel trading after price spike','nickel'],['2023-08','China export controls on gallium and germanium take effect','gallium, germanium'],['2023-12','China export controls on graphite take effect','graphite'],['2025-02','DR Congo suspends cobalt exports','cobalt'],['2025-04','China export licensing on seven rare earths','rare earths']];
+  function corr(a,b){var n=a.length,sa=0,sb=0;for(var i=0;i<n;i++){sa+=a[i];sb+=b[i]}var ma=sa/n,mb=sb/n,num=0,da=0,db=0;for(var i=0;i<n;i++){num+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)*(a[i]-ma);db+=(b[i]-mb)*(b[i]-mb)}return num/Math.sqrt(da*db)}
+  var roll=[];for(var i=0;i<N;i++){roll.push(i<11?null:corr(metals.slice(i-11,i+1),gpr.slice(i-11,i+1)))}
+  document.getElementById('corrall').textContent=corr(metals,gpr).toFixed(2);
+  var g1=document.getElementById('geo1'),g2=document.getElementById('geo2');
+  var GL=44,GT=12,GW=750,GH=180;var gx=function(i){return GL+GW*i/(N-1)};
+  var mmin=60,mmax=180,gmin=0,gmax=360;var my=function(v){return GT+GH-GH*(v-mmin)/(mmax-mmin)},gy=function(v){return GT+GH-GH*(v-gmin)/(gmax-gmin)};
+  function drawGeo(sel){
+    g1.innerHTML='';
+    [80,100,120,140,160].forEach(function(v){g1.appendChild(svgEl('line',{x1:GL,x2:GL+GW,y1:my(v),y2:my(v),'class':'grid'}));var t=svgEl('text',{x:GL-5,y:my(v)+4,'text-anchor':'end'});t.textContent=v;g1.appendChild(t)});
+    [100,200,300].forEach(function(v){var t=svgEl('text',{x:GL+GW+5,y:gy(v)+4});t.textContent=v;g1.appendChild(t)});
+    for(var y=2019;y<=2026;y++){var i=(y-2019)*12;var t=svgEl('text',{x:gx(i),y:GT+GH+16,'text-anchor':'start'});t.textContent=y;g1.appendChild(t)}
+    g1.appendChild(svgEl('path',{d:gpr.map(function(v,i){return (i?'L':'M')+gx(i)+' '+gy(v)}).join(' '),'class':'line g'}));
+    g1.appendChild(svgEl('path',{d:metals.map(function(v,i){return (i?'L':'M')+gx(i)+' '+my(v)}).join(' '),'class':'line'}));
+    EV.forEach(function(e,k){var i=lab.indexOf(e[0]);g1.appendChild(svgEl('line',{x1:gx(i),x2:gx(i),y1:GT,y2:GT+GH,'class':'ev',opacity:sel===k?1:0.5}));var d=svgEl('circle',{cx:gx(i),cy:GT-4,r:sel===k?5:3,'class':'evd'});bind(d,e[0]+': '+e[1]);g1.appendChild(d)});
+    for(var i=0;i<N;i++){var c=svgEl('rect',{x:gx(i)-4,y:GT,width:8,height:GH,fill:'transparent'});bind(c,lab[i]+': metals '+metals[i].toFixed(0)+', risk '+gpr[i].toFixed(0));g1.appendChild(c)}
+    g2.innerHTML='';var CH=90,cy=function(v){return GT+CH/2-v*CH/2};
+    [-1,-0.5,0,0.5,1].forEach(function(v){g2.appendChild(svgEl('line',{x1:GL,x2:GL+GW,y1:cy(v),y2:cy(v),'class':v===0?'zero':'grid'}));var t=svgEl('text',{x:GL-5,y:cy(v)+4,'text-anchor':'end'});t.textContent=v;g2.appendChild(t)});
+    for(var y=2019;y<=2026;y++){var i=(y-2019)*12;var t=svgEl('text',{x:gx(i),y:GT+CH+16,'text-anchor':'start'});t.textContent=y;g2.appendChild(t)}
+    var d='';roll.forEach(function(v,i){if(v===null)return;d+=(d?'L':'M')+gx(i)+' '+cy(v)});g2.appendChild(svgEl('path',{d:d,'class':'corr'}));
+    EV.forEach(function(e,k){var i=lab.indexOf(e[0]);g2.appendChild(svgEl('line',{x1:gx(i),x2:gx(i),y1:GT,y2:GT+CH,'class':'ev',opacity:sel===k?1:0.4}))});
+    for(var i=11;i<N;i++){var c=svgEl('rect',{x:gx(i)-4,y:GT,width:8,height:CH,fill:'transparent'});bind(c,lab[i]+': 12-month correlation '+roll[i].toFixed(2));g2.appendChild(c)}
+  }
+  var etb=document.querySelector('#evs tbody'),evnote=document.getElementById('evnote');
+  function pct(a,b){return ((b/a-1)*100).toFixed(1)}
+  EV.forEach(function(e,k){var i=lab.indexOf(e[0]);var m1=pct(metals[i],metals[Math.min(i+1,N-1)]),m3=pct(metals[i],metals[Math.min(i+3,N-1)]);
+    var tr=document.createElement('tr');tr.setAttribute('aria-selected','false');tr.innerHTML='<td>'+e[0]+'</td><td>'+e[1]+'</td><td class="hide">'+e[2]+'</td><td class="num" style="color:'+(m1<0?'var(--brick)':'var(--moss)')+'">'+(m1>0?'+':'')+m1+'%</td><td class="num" style="color:'+(m3<0?'var(--brick)':'var(--moss)')+'">'+(m3>0?'+':'')+m3+'%</td><td class="num hide">'+gpr[i].toFixed(0)+'</td>';
+    tr.addEventListener('click',function(){Array.prototype.forEach.call(etb.children,function(r,j){r.setAttribute('aria-selected',String(j===k))});drawGeo(k);evnote.textContent=e[0]+', '+e[1]+'. Metals index moved '+(m1>0?'+':'')+m1+'% in the following month and '+(m3>0?'+':'')+m3+'% over three months; the risk index that month read '+gpr[i].toFixed(0)+'. Whether the event explains the move is a question for a control window, not this table.'});
+    etb.appendChild(tr)});
+  drawGeo(-1);evnote.textContent='Select an event above to see the index move after it.';
+
+  // glossary
+  var G={
+    'CRMA':'Critical Raw Materials Act, Regulation (EU) 2024/1252. Sets 2030 benchmarks for EU extraction, processing and recycling of strategic raw materials.',
+    'CRMA Tracker':'M2i feature that benchmarks current production volumes against the CRMA 2030 targets. EIT RM proprietary content.',
+    'ERMA':'European Raw Materials Alliance, an EIT RawMaterials initiative connecting organisations along the raw materials value chain; its data is EIT RM proprietary content on the platform.',
+    'restricted-use':'Platform content from a licensed external provider with stricter usage rules: view-only, no raw export, no AI training. The Industry / Battery dashboards are named as such in the T&Cs.',
+    'derived data':'Datasets EIT RM builds by combining or harmonising public sources so the original source data can no longer be identified in its original form.',
+    'proprietary':'Content created, collected or calculated only by EIT RM: ERMA data, CRMA Tracker data and self-generated KPIs such as compound annual growth rates.',
+    'semantic model':'The Power BI dataset layer: tables, relationships, measures written in DAX, and security rules. What every report page reads from.',
+    'DAX':'Data Analysis Expressions, the formula language for measures and calculated columns in Power BI and Fabric semantic models.',
+    'Power Query':'The transformation layer in Power BI (language M). In Fabric the same engine runs as Dataflows Gen2.',
+    'Dataflows Gen2':'Fabric\u2019s Power Query-based ingestion and transformation component, writing to a lakehouse or warehouse.',
+    'lakehouse':'Fabric storage combining a data lake with table semantics (Delta tables), usually layered Bronze (raw), Silver (cleansed), Gold (modelled for reporting).',
+    'Gold layer':'The reporting-ready layer of a lakehouse: fact and dimension tables at a defined grain, from which semantic models are built.',
+    'Direct Lake':'A Fabric semantic-model mode that reads Delta tables in the lakehouse directly, without import or DirectQuery.',
+    'row-level security':'Rules in the semantic model that restrict which rows a user can see; object-level security restricts which tables or columns. On M2i these enforce licence terms.',
+    'reference implementation':'The existing, trusted version of a calculation kept alive as the yardstick until its replacement reconciles to it row for row.',
+    'measure basis register':'One row per measure stating what it counts: value-chain stage, unit and what it is a tonne of, geographic scope, period and source. Two figures are compared only once their bases match.',
+    'source-precedence rule':'The written rule for which source the platform shows when two sources give different figures for the same measure and period.',
+    'reconciliation':'Independently recomputing a figure from source and comparing it to what the platform shows, with differences listed and rated for materiality.',
+    'materiality':'How much a difference matters to a decision the number supports. Decides which breaks are fixed first and which are noted and left.',
+    'refresh':'The scheduled process that reloads a semantic model or dataset from its sources. Its failures and durations are the first health signal on any BI platform.',
+    'CN8':'The eight-digit Combined Nomenclature product code used in EU trade statistics (Comext).',
+    'SDMX':'Statistical Data and Metadata eXchange, the standard REST format Eurostat and the ECB publish data in.',
+    'Comext':'Eurostat\u2019s database of EU international trade in goods, by product code, reporter and partner country.',
+    'HHI':'Herfindahl\u2013Hirschman Index: the sum of squared market shares, 0 to 10,000. Above 2,500 is conventionally treated as concentrated.',
+    'LCE':'Lithium carbonate equivalent, the standard unit for comparing lithium quantities across chemical forms.',
+    'GPR index':'Geopolitical Risk index (Caldara and Iacoviello): a monthly count of newspaper articles about geopolitical tensions, normalised to 100 over 1985\u20132019.',
+    'multi-tenant':'One platform serving separate groups of users (here internal EIT RM staff and external partners) with isolated access, data visibility and administration.'
+  };
+  var gl=document.getElementById('gloss');Object.keys(G).forEach(function(k){var d=document.createElement('div');d.innerHTML='<b>'+k+'</b> '+G[k];gl.appendChild(d)});
+  var pop=document.getElementById('pop');
+  function mark(){
+    var keys=Object.keys(G).sort(function(a,b){return b.length-a.length});
+    var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p||/^(SCRIPT|STYLE|H1|H2|H3|SUMMARY|B|DT|TH)$/.test(p.tagName)||p.closest('.app,.gloss,.pop,.contract,.reg,#kpis,.chips,.tl,.lineage,.badge,h3,.dtabs,.kpi,.legend,.credit')||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}});
+    var nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    var seen={};
+    nodes.forEach(function(n){
+      var txt=n.nodeValue,frag=null,i=0,out=document.createDocumentFragment(),changed=false;
+      while(i<txt.length){
+        var best=null,bi=-1;
+        keys.forEach(function(k){if(seen[k])return;var re=new RegExp('(^|[^A-Za-z-])('+k.replace(/[-]/g,'\\-')+')(?![A-Za-z])','i');var m=re.exec(txt.slice(i));if(m&&(bi<0||i+m.index+m[1].length<bi)){bi=i+m.index+m[1].length;best={k:k,len:m[2].length}}});
+        if(!best)break;
+        out.appendChild(document.createTextNode(txt.slice(i,bi)));
+        var a=document.createElement('abbr');a.className='g';a.setAttribute('data-k',best.k);a.setAttribute('tabindex','0');a.textContent=txt.substr(bi,best.len);out.appendChild(a);
+        seen[best.k]=true;changed=true;i=bi+best.len;
+      }
+      if(changed){out.appendChild(document.createTextNode(txt.slice(i)));n.parentNode.replaceChild(out,n)}
+    });
+  }
+  mark();
+  function openPop(el){pop.innerHTML='<b>'+el.getAttribute('data-k')+'</b>'+G[el.getAttribute('data-k')];pop.style.display='block';var r=el.getBoundingClientRect();var x=r.left+window.scrollX,y=r.bottom+window.scrollY+6;if(x+310>window.scrollX+window.innerWidth)x=window.scrollX+window.innerWidth-316;pop.style.left=x+'px';pop.style.top=y+'px'}
+  function closePop(){pop.style.display='none'}
+  document.addEventListener('click',function(e){var t=e.target.closest('.g');if(t){e.preventDefault();openPop(t)}else if(!e.target.closest('.pop'))closePop()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePop();if((e.key==='Enter'||e.key===' ')&&document.activeElement.classList&&document.activeElement.classList.contains('g')){e.preventDefault();openPop(document.activeElement)}});
+})();
+
+  // deeper sections: expand/collapse all, and open on anchor navigation
+  document.getElementById('openall').addEventListener('click',function(){document.querySelectorAll('details.deeper').forEach(function(d){d.open=true})});
+  document.getElementById('closeall').addEventListener('click',function(){document.querySelectorAll('details.deeper').forEach(function(d){d.open=false})});
+  function openForHash(){var id=location.hash.slice(1);if(!id)return;var el=document.getElementById(id);if(!el)return;var d=el.closest('details.deeper');if(d){d.open=true;el.scrollIntoView()}}
+  window.addEventListener('hashchange',openForHash);openForHash();
+  document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(!a)return;var el=document.getElementById(a.getAttribute('href').slice(1));if(!el)return;var d=el.closest('details.deeper');if(d)d.open=true});
+</script>
+</body>
+</html>

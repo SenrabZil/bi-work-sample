@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minerals &amp; metals intelligence: Power BI report mock-up</title>
+<style>
+:root{--slate:#2f3a45;--slate2:#5a6470;--moss:#4f6b4a;--ochre:#b98a2c;--brick:#a4432e;--ink:#22262b;--line:#e2ddd2;--paper:#fcfbf8;--card:#ffffff;--grey:#8a9099;--tint:#f3f0e8}
+*{box-sizing:border-box}
+html,body{margin:0;background:#e9e6df;color:var(--ink);font-family:"Segoe UI","Avenir Next",Helvetica,Arial,sans-serif;font-size:13px}
+.frame{max-width:1280px;margin:18px auto;background:var(--paper);border:1px solid #d5d0c5;box-shadow:0 8px 30px rgba(40,40,30,.12)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.topbar h1{font-family:Georgia,"Bitstream Charter",serif;font-weight:400;font-size:17px;color:var(--slate);margin:0}
+.topbar .tag{font-size:11px;color:var(--slate2);border:1px solid var(--line);padding:2px 8px;border-radius:3px;margin-left:10px}
+.topbar .right{display:flex;gap:14px;font-size:12px;color:var(--slate2)}
+.topbar .right span b{color:var(--slate)}
+.layout{display:flex;min-height:720px}
+.pages{width:180px;border-right:1px solid var(--line);background:#fff;padding:10px 0}
+.pages button{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:9px 14px;font:inherit;color:var(--slate2);cursor:pointer}
+.pages button[aria-selected="true"]{border-left-color:var(--brick);color:var(--slate);font-weight:600;background:var(--tint)}
+.pages .lbl{font-size:10px;color:var(--grey);padding:12px 14px 4px}
+.canvas{flex:1;padding:12px 16px 16px}
+.slicer{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.slicer .k{font-size:11px;color:var(--slate2);margin-right:4px}
+.slicer button{font:inherit;font-size:12px;border:1px solid var(--line);background:#fff;color:var(--slate2);padding:4px 10px;border-radius:2px;cursor:pointer}
+.slicer button[aria-pressed="true"]{background:var(--slate);color:#fff;border-color:var(--slate)}
+.page{display:none}.page[data-active="true"]{display:block}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(90px,auto);gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);padding:10px 12px;position:relative;min-height:0}
+.tile h3{font-family:Georgia,"Bitstream Charter",serif;font-weight:400;font-size:13px;color:var(--slate);margin:0 0 1px}
+.tile .sub{font-size:10.5px;color:var(--grey);margin:0 0 6px}
+.tier{position:absolute;top:9px;right:12px;font-size:9.5px;letter-spacing:.06em;color:var(--slate2);border:1px solid var(--line);padding:1px 6px;border-radius:2px;background:#fff}
+.tier.p{color:var(--ochre);border-color:#e6d5aa}.tier.r{color:var(--brick);border-color:#e3c2b8}.tier.d{color:var(--moss);border-color:#c6d3c3}
+.card .v{font-family:Georgia,serif;font-size:28px;color:var(--brick);line-height:1.05;margin-top:4px}
+.card .v.good{color:var(--moss)}.card .v.slate{color:var(--slate)}.card .v.blank{color:var(--grey)}
+.card .k{font-size:11px;color:var(--slate2);margin-top:2px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:"Segoe UI",Helvetica,Arial,sans-serif;font-size:10px;fill:var(--slate2)}
+.grid-l{stroke:#eee9df;stroke-width:1}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{text-align:left;font-weight:600;color:var(--slate2);border-bottom:1px solid var(--slate);padding:4px 6px 4px 0;font-size:10.5px}
+td{padding:4px 6px 4px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.st{display:inline-block;padding:1px 7px;border-radius:2px;font-size:10.5px;color:#fff}
+.st.g{background:var(--moss)}.st.b{background:var(--brick)}.st.o{background:var(--ochre)}.st.x{background:var(--grey)}
+.matrix td.brk{background:#f0d9d3;color:var(--brick);font-weight:600;text-align:right}
+.matrix td.num{text-align:right;color:var(--grey)}
+.matrix th.num{text-align:right}
+.verdict{padding:12px 14px;color:#fff;font-family:Georgia,serif;font-size:16px;line-height:1.25}
+.verdict.open{background:var(--moss)}.verdict.closed{background:var(--brick)}
+.fix{margin-top:8px;font:inherit;font-size:12px;border:1px solid var(--line);background:#fff;padding:5px 10px;cursor:pointer;color:var(--slate)}
+.insight{background:var(--tint);border-left:3px solid var(--slate);padding:9px 12px;font-size:11.5px;line-height:1.35}.insight b{color:var(--slate)}
+.footer{padding:6px 16px 10px;font-size:10.5px;color:var(--grey);border-top:1px solid var(--line);display:flex;justify-content:space-between}
+.check{display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--line);font-size:11.5px}
+.check i{display:inline-block;width:14px;height:14px;border-radius:50%;font-style:normal;color:#fff;font-size:10px;text-align:center;line-height:14px}
+.check i.y{background:var(--moss)}.check i.n{background:var(--brick)}
+.sp3{grid-column:span 3}.sp4{grid-column:span 4}.sp5{grid-column:span 5}.sp6{grid-column:span 6}.sp7{grid-column:span 7}.sp8{grid-column:span 8}.sp12{grid-column:span 12}
+.r2{grid-row:span 2}.r3{grid-row:span 3}
+@media (max-width:820px){.layout{flex-direction:column}.pages{width:100%;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.pages .lbl{display:none}.pages button{white-space:nowrap;border-left:0;border-bottom:3px solid transparent}.pages button[aria-selected="true"]{border-bottom-color:var(--brick)}.sp3,.sp4,.sp5,.sp6,.sp7,.sp8{grid-column:span 12}}
+
+.glossary-btn{font:inherit;font-size:11px;border:1px solid var(--line);background:var(--tint);color:var(--slate);padding:4px 9px;border-radius:3px;cursor:pointer;white-space:nowrap}.glossary-btn:hover,.glossary-btn:focus{border-color:var(--slate2);outline:none}.modal-backdrop{position:fixed;inset:0;background:rgba(34,38,43,.45);display:none;align-items:center;justify-content:center;padding:24px;z-index:1000}.modal-backdrop.open{display:flex}.modal{width:min(900px,96vw);max-height:88vh;overflow:auto;background:var(--paper);border:1px solid #cfc9bd;box-shadow:0 18px 55px rgba(20,20,15,.28)}.modal-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line)}.modal-head h2{font-family:Georgia,"Bitstream Charter",serif;font-size:19px;font-weight:400;color:var(--slate);margin:0}.modal-head p{margin:3px 0 0;font-size:11px;color:var(--grey)}.modal-close{font:inherit;font-size:18px;line-height:1;border:0;background:transparent;color:var(--slate2);cursor:pointer;padding:3px 6px}.modal-body{padding:16px 18px 20px}.gloss-intro{background:var(--tint);border-left:3px solid var(--ochre);padding:9px 11px;margin-bottom:14px;font-size:11.5px;color:var(--slate2);line-height:1.45}.gloss-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}.gloss-section{break-inside:avoid;margin-bottom:18px}.gloss-section h3{font-family:Georgia,"Bitstream Charter",serif;font-weight:400;color:var(--slate);font-size:14px;margin:0 0 7px;padding-bottom:4px;border-bottom:1px solid var(--line)}.term{padding:6px 0;border-bottom:1px solid #eee9df;line-height:1.38}.term:last-child{border-bottom:0}.term b{color:var(--slate)}.term small{display:block;color:var(--grey);font-size:10.5px;margin-top:1px}.formula{font-family:Consolas,"SFMono-Regular",monospace;font-size:10.5px;background:#f6f4ef;border:1px solid var(--line);padding:5px 7px;margin-top:4px;color:var(--slate)}@media(max-width:760px){.gloss-grid{grid-template-columns:1fr}.topbar .right{gap:7px;flex-wrap:wrap}.modal-backdrop{padding:8px}}
+
+.finding{font-family:Georgia,"Bitstream Charter",serif;font-size:11px;font-style:italic;color:var(--slate);margin:2px 30px 5px 0;line-height:1.25}.info-btn{position:absolute;top:8px;right:8px;width:20px;height:20px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--slate2);font:600 11px/18px "Segoe UI",sans-serif;text-align:center;cursor:pointer;z-index:3}.tile .tier+.info-btn{right:108px}.info-btn:hover,.info-btn:focus{border-color:var(--slate);color:var(--slate);outline:none}.method-grid{display:grid;grid-template-columns:120px 1fr;gap:7px 12px;font-size:11.5px;line-height:1.4}.method-grid dt{font-weight:600;color:var(--slate)}.method-grid dd{margin:0;color:var(--slate2)}.quality-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}.quality-dim{border:1px solid var(--line);background:#fff;padding:8px 9px;min-height:74px}.quality-dim b{display:block;color:var(--slate);font-size:11px;margin-bottom:3px}.quality-dim span{font-size:10.5px;color:var(--slate2);line-height:1.3}.period-chip{font-size:11px;color:var(--slate2);white-space:nowrap}.period-chip b{color:var(--slate)}@media(max-width:900px){.quality-grid{grid-template-columns:1fr 1fr}.method-grid{grid-template-columns:95px 1fr}}
+
+.resource-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.resource-toolbar input,.resource-toolbar select{font:inherit;border:1px solid var(--line);background:#fff;color:var(--slate);padding:6px 8px;border-radius:2px}.resource-toolbar input{flex:1;min-width:220px}.resource-card{display:flex;flex-direction:column;gap:5px}.resource-card .meta{font-size:10.5px;color:var(--grey)}.resource-card .desc{font-size:11.5px;color:var(--slate2);line-height:1.35;min-height:45px}.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}.chip{font-size:9.5px;border:1px solid var(--line);padding:2px 6px;border-radius:10px;color:var(--slate2);background:#fff}.resource-actions{margin-top:auto;padding-top:6px;display:flex;gap:6px}.mini-btn{font:inherit;font-size:10.5px;border:1px solid var(--line);background:#fff;color:var(--slate);padding:4px 7px;border-radius:2px;cursor:pointer}.api-endpoint{font-family:Consolas,"SFMono-Regular",monospace;font-size:11px;background:#f6f4ef;border:1px solid var(--line);padding:7px 8px;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.verb{display:inline-block;font:600 9px/1 "Segoe UI",sans-serif;letter-spacing:.05em;padding:3px 5px;border-radius:2px;margin-right:7px;background:var(--moss);color:#fff}.codebox{background:#252b31;color:#eef1f3;border:1px solid #1d2227;padding:12px 14px;font:11px/1.55 Consolas,"SFMono-Regular",monospace;overflow:auto;white-space:pre}.api-stat{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--line);font-size:11px}.api-stat:last-child{border-bottom:0}.api-stat b{color:var(--slate)}.doclink{color:var(--slate);text-decoration:none;border-bottom:1px solid var(--ochre)}.library-note{font-size:10.5px;color:var(--grey);margin-top:4px}.hidden{display:none!important}
+
+/* layout fixes: keep tier badge, info button and titles from overlapping */
+.info-btn,.tile .tier+.info-btn{top:7px;right:8px}
+.tile .tier{right:36px}
+.tile h3{padding-right:200px}
+.tile.card h3{padding-right:26px}
+.tile.card{padding-bottom:30px}
+.tile.card .tier{top:auto;bottom:8px;right:auto;left:12px}
+.tile.resource-card h3{padding-right:0}
+.insight{position:relative;padding-right:170px}
+.insight .tier{right:12px}
+@media(max-width:900px){.tile h3{padding-right:26px}.tile .tier{position:static;display:inline-block;margin:0 0 4px}.tile.card .tier{position:absolute}.insight{padding-right:12px}}
+
+.info-hint{margin-left:auto;font-size:11px;color:var(--slate2);display:flex;align-items:center;gap:6px;text-align:right}
+.info-hint b{color:var(--slate)}
+.info-glyph{display:inline-block;width:16px;height:16px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--slate2);font:600 10px/14px "Segoe UI",sans-serif;text-align:center;flex:none}
+.info-why{margin:14px 0 0;padding:9px 12px;background:var(--tint);border-left:3px solid var(--ochre);font-size:11.5px;line-height:1.4;color:var(--slate2)}
+.info-why b{color:var(--slate)}
+@media(max-width:900px){.info-hint{display:none}}
+
+.slicer.nofilter .k,.slicer.nofilter button{display:none}
+.slicer.nofilter .info-hint{margin-left:auto}
+
+.topbar{gap:14px;flex-wrap:wrap}
+.topbar .right span{white-space:nowrap}
+.topbar .right{gap:12px}
+</style></head>
+<body>
+<div class="frame">
+  <div class="topbar">
+    <div style="display:flex;align-items:center"><h1 style="white-space:nowrap">Minerals &amp; metals intelligence mock-up</h1><span class="tag" style="white-space:nowrap">prepared for the M2i Platform RFP · illustrative data</span></div>
+    <div class="right"><span>Semantic model <b>work-sample</b></span><span class="period-chip">Data period <b>Jan–Dec 2025</b></span><span>Refreshed <b>15 Sep 2026 06:12</b></span><span>Viewing as <b>Internal</b></span><button class="glossary-btn" id="glossary-open" type="button" aria-haspopup="dialog" aria-controls="glossary-modal">Glossary &amp; methodology</button></div>
+  </div>
+  <div class="layout">
+    <nav class="pages" role="tablist" aria-label="Report pages">
+      <div class="lbl">Pages</div>
+      <button role="tab" aria-selected="true" data-p="commodity">Commodity</button>
+      <button role="tab" aria-selected="false" data-p="trade">Trade</button>
+      <button role="tab" aria-selected="false" data-p="health">Data &amp; platform assurance</button>
+      <button role="tab" aria-selected="false" data-p="migration">Power BI → Fabric migration assurance</button>
+      <button role="tab" aria-selected="false" data-p="library">Resource library</button>
+      <button role="tab" aria-selected="false" data-p="api">API &amp; developer access</button>
+    </nav>
+    <div class="canvas">
+      <div class="slicer" id="slicer"><span class="k">Commodity group</span>
+        <button aria-pressed="true" data-g="all">All</button><button aria-pressed="false" data-g="battery">Battery metals</button><button aria-pressed="false" data-g="magnet">Magnet metals</button><button aria-pressed="false" data-g="base">Base metals</button>
+        <span class="info-hint"><span class="info-glyph" aria-hidden="true">i</span>Select the <b>i</b> on any tile to see what the figure counts: measure, method, scope, source, transformation and freshness.</span>
+      </div>
+
+      <!-- COMMODITY -->
+      <section class="page" data-active="true" id="p-commodity"><div class="grid">
+        <div class="tile card sp3"><h3>High-dependency / high-risk commodities</h3><p class="sub">illustrative screening rule: import reliance &gt;80% and supply risk &gt;3</p><div class="v" id="k-watch">–</div><div class="k">of <span id="k-n"></span> in scope</div><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile card sp3"><h3>Import reliance</h3><p class="sub">volume-weighted, 2025</p><div class="v slate" id="k-rel">–</div><div class="k">share of apparent consumption imported</div><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile card sp3"><h3>Import volume</h3><p class="sub">2025, kilotonnes</p><div class="v slate" id="k-vol">–</div><div class="k">across commodities in scope</div><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile card sp3"><h3>Price index, TTM change</h3><p class="sub">Jan 2025 = 100</p><div class="v" id="k-ttm">–</div><div class="k">Dec 2025 against Jan 2025</div><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile sp12 insight"><b>Current signal.</b> Rare earths and graphite combine very high EU import reliance with elevated supply risk. <b>Decision use.</b> Prioritise diversification, substitution analysis and European processing/recycling opportunities. <span class="tier d">Illustrative interpretation</span></div>
+        <div class="tile sp5 r3"><h3>EU import reliance</h3><p class="finding">Dependency remains highest in selected strategic and magnet-related materials.</p><p class="sub">share of apparent consumption imported, 2025 · above 80% brick · 50 to 80% ochre · below 50% moss</p><svg id="c-rel" viewBox="0 0 420 300"></svg><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile sp7 r3"><h3>Supply risk against economic importance</h3><p class="finding">The highest-risk materials combine strategic importance with constrained supply resilience.</p><p class="sub">bubble size is import volume; shaded area indicates elevated supply risk</p><svg id="c-risk" viewBox="0 0 560 300"></svg><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile sp7 r2"><h3>Price index, trailing twelve months</h3><p class="finding">Magnet metals show the strongest price pressure over the period.</p><p class="sub">January 2025 = 100, by group</p><svg id="c-idx" viewBox="0 0 560 190"></svg><span class="tier d">Derived · sample · 2025</span></div>
+        <div class="tile sp5 r2"><h3>CRMA benchmark tracker</h3><p class="finding">Illustrative domestic shares remain below the 2030 reference levels across all three capabilities.</p><p class="sub">EU domestic share of consumption, 2025, against the Act's 2030 benchmarks</p><svg id="c-crma" viewBox="0 0 420 190"></svg><span class="tier p">M2i · proprietary · 2025</span></div>
+      </div></section>
+
+      <!-- TRADE -->
+      <section class="page" id="p-trade"><div class="grid">
+        <div class="tile sp5 r3"><h3>Top partner countries, EU imports</h3><p class="finding">Import exposure remains concentrated among a small group of partner countries.</p><p class="sub">share of import value, 2025</p><svg id="t-part" viewBox="0 0 420 280"></svg><span class="tier d">Derived · Comext · 2025</span></div>
+        <div class="tile sp7 r3"><h3>EU import value, monthly</h3><p class="finding">The EU remains a net importer across the illustrative commodity portfolio.</p><p class="sub">EUR billion, with net trade</p><svg id="t-imp" viewBox="0 0 560 280"></svg><span class="tier d">Derived · Comext · 2025</span></div>
+        <div class="tile sp3 card"><h3>Supplier concentration</h3><p class="sub">Herfindahl index, Dec 2025</p><div class="v slate" id="t-hhi">–</div><div class="k" id="t-hhik">above 2,500 is concentrated</div><span class="tier d">Derived · Comext · 2025</span></div>
+        <div class="tile sp4 r2"><h3>Concentration over the year</h3><p class="finding">Supplier concentration rises through 2025 for the selected portfolio.</p><p class="sub">HHI, monthly, 2,500 line marks concentrated</p><svg id="t-hhic" viewBox="0 0 320 170"></svg><span class="tier d">Derived · Comext · 2025</span></div>
+        <div class="tile sp5 r2"><h3>Largest single third-country supplier</h3><p class="finding">Selected materials exceed the CRMA diversification reference point in this illustrative view.</p><p class="sub">share of EU supply from the top supplier, against the CRMA 65% diversification benchmark</p><svg id="t-single" viewBox="0 0 420 170"></svg><span class="tier p">M2i / CRMA · 2025</span></div>
+        <div class="tile sp3 card"><h3>Above the 65% benchmark</h3><p class="sub">commodities, 2025</p><div class="v" id="t-over">–</div><div class="k">largest supplier share exceeds the CRMA diversification benchmark</div><span class="tier p">M2i / CRMA · 2025</span></div>
+      </div></section>
+
+      <!-- HEALTH -->
+      <section class="page" id="p-health"><div class="grid">
+        <div class="tile card sp3"><h3>Refreshes within target</h3><p class="sub">last thirty days</p><div class="v good">26 / 30</div><div class="k">2 slow · 2 failed</div></div>
+        <div class="tile card sp3"><h3>Datasets on hold</h3><p class="sub">publication hold requiring manual release</p><div class="v">2</div><div class="k">Prices (Pink Sheet) · Battery feed</div></div>
+        <div class="tile card sp3"><h3>Reconciled this month</h3><p class="sub">register</p><div class="v good">7 / 9</div><div class="k">open breaks: 1</div></div>
+        <div class="tile card sp3"><h3>Active users, 30 days</h3><p class="sub">per partner tier</p><div class="v blank">—</div><div class="k">not built: deliverable 4</div></div>
+        <div class="tile sp12"><h3>Data quality dimensions</h3><p class="finding">Release controls are mapped to explicit quality dimensions rather than a single pass/fail status.</p><p class="sub">illustrative assurance taxonomy for operational monitoring</p><div class="quality-grid"><div class="quality-dim"><b>Completeness</b><span>Expected records and periods are present.</span></div><div class="quality-dim"><b>Accuracy</b><span>Produced values reconcile to authoritative or agreed reference data.</span></div><div class="quality-dim"><b>Consistency</b><span>Values remain coherent across datasets, periods and aggregations.</span></div><div class="quality-dim"><b>Timeliness</b><span>Source arrival and processing complete within the required window.</span></div><div class="quality-dim"><b>Validity &amp; traceability</b><span>Business rules pass and transformations, lineage and ownership are documented.</span></div></div><span class="tier d">Assurance framework · illustrative</span></div>
+        <div class="tile sp7 r2"><h3>Refresh health, last thirty days</h3><p class="sub">semantic model refresh duration in minutes · target 20</p><svg id="h-ref" viewBox="0 0 560 170"></svg></div>
+        <div class="tile sp5 r2"><h3>Release gate: Prices (Pink Sheet), September</h3><p class="sub">the dataset is published only when all six are on</p><div id="h-gate"></div><div class="verdict closed" id="h-verdict" style="margin-top:8px;font-size:13px">× CLOSED — 2 checks outstanding</div></div>
+        <div class="tile sp12"><h3>Reconciliation status by dataset</h3><p class="sub">the register, as a tile</p>
+          <table><thead><tr><th>Dataset</th><th>Tier</th><th>Last reconciled</th><th>Open breaks</th><th>Status</th><th>Note</th></tr></thead><tbody id="h-recon"></tbody></table></div>
+      </div></section>
+
+      <!-- MIGRATION -->
+      <section class="page" id="p-migration"><div class="grid">
+        <div class="tile sp5"><h3>Power BI → Fabric migration assurance</h3><p class="sub">only when the row-level comparison is clean</p><div class="verdict closed" id="m-verdict">× NOT YET — 1 break; reference stays live</div><button class="fix" id="m-fix">Apply the fix: tonne to kilotonne on the nickel feed</button></div>
+        <div class="tile card sp3"><h3>Rows compared</h3><p class="sub">commodity-months, 2025</p><div class="v slate" id="m-rows">143 / 144</div><div class="k">rows match within 0.01 EUR m</div></div>
+        <div class="tile card sp4"><h3>Where to look first</h3><p class="sub">largest absolute difference</p><div class="v" id="m-largest" style="font-size:18px">Nickel, Mar 2025: 1,398,000 EUR m</div><div class="k">unit error in the rebuild feed</div></div>
+        <div class="tile sp12"><h3>Row-level comparison: Fabric rebuild minus Power BI reference</h3><p class="sub">imports, EUR m; a brick cell is a break</p>
+          <table class="matrix"><thead id="m-head"></thead><tbody id="m-body"></tbody></table></div>
+        <div class="tile sp12"><h3>Migration register</h3><p class="sub">what moves into Fabric, what stays in the semantic model, and the evidence required before anything is retired</p>
+          <table><thead><tr><th>Item</th><th>Lives today</th><th>Fabric target</th><th>Moves</th><th>Comparison evidence</th></tr></thead><tbody id="m-reg"></tbody></table></div>
+      </div></section>
+
+      <!-- RESOURCE LIBRARY -->
+      <section class="page" id="p-library"><div class="grid">
+        <div class="tile sp12"><h3>Resource library</h3><p class="finding">A governed catalogue turns reports, datasets and methodology into reusable intelligence assets.</p><p class="sub">illustrative content catalogue · metadata, provenance, access tier and freshness shown at item level</p>
+          <div class="resource-toolbar"><input id="resource-search" type="search" placeholder="Search resources, commodities, countries, methodology…" aria-label="Search resource library"><select id="resource-type" aria-label="Filter resource type"><option value="all">All types</option><option value="report">Reports</option><option value="dataset">Datasets</option><option value="method">Methodology</option><option value="brief">Briefings</option></select><select id="resource-tier" aria-label="Filter access tier"><option value="all">All access tiers</option><option value="public">Public</option><option value="partner">Partner</option><option value="internal">Internal</option></select></div>
+          <div class="library-note">Items below are illustrative examples, not asserted M2i catalogue entries.</div><span class="tier d">Catalogue concept · illustrative</span></div>
+        <div class="tile sp4 resource-card" data-rtype="report" data-tier="partner"><h3>Critical Raw Materials Market Outlook 2026</h3><div class="meta">Report · Partner · updated 10 Sep 2026</div><div class="desc">Cross-commodity outlook covering dependency, price pressure, supply concentration and CRMA benchmarks.</div><div class="chips"><span class="chip">CRMA</span><span class="chip">EU</span><span class="chip">market outlook</span></div><div class="resource-actions"><button class="mini-btn">Open</button><button class="mini-btn">View metadata</button></div></div>
+        <div class="tile sp4 resource-card" data-rtype="dataset" data-tier="partner"><h3>EU trade flows by commodity and partner</h3><div class="meta">Dataset · Derived · Comext · refreshed 15 Sep 2026</div><div class="desc">Monthly import/export values and quantities, harmonised to the M2i commodity taxonomy.</div><div class="chips"><span class="chip">trade</span><span class="chip">Comext</span><span class="chip">monthly</span></div><div class="resource-actions"><button class="mini-btn">Preview</button><button class="mini-btn">API</button></div></div>
+        <div class="tile sp4 resource-card" data-rtype="method" data-tier="public"><h3>Supplier concentration methodology</h3><div class="meta">Methodology · Public · version 1.4</div><div class="desc">Definitions for supplier shares, HHI, concentration bands and treatment of partner-country groupings.</div><div class="chips"><span class="chip">HHI</span><span class="chip">methodology</span><span class="chip">quality</span></div><div class="resource-actions"><button class="mini-btn">Read</button><button class="mini-btn">Cite</button></div></div>
+        <div class="tile sp4 resource-card" data-rtype="brief" data-tier="partner"><h3>Rare earths dependency briefing</h3><div class="meta">Briefing · Partner · 12 Sep 2026</div><div class="desc">Short-form intelligence note linking import dependency, supplier concentration and downstream exposure.</div><div class="chips"><span class="chip">rare earths</span><span class="chip">China</span><span class="chip">magnets</span></div><div class="resource-actions"><button class="mini-btn">Open</button><button class="mini-btn">Related data</button></div></div>
+        <div class="tile sp4 resource-card" data-rtype="dataset" data-tier="internal"><h3>CRMA benchmark tracker</h3><div class="meta">Dataset · Proprietary · Internal · updated 1 Sep 2026</div><div class="desc">Curated benchmark and progress series for extraction, processing, recycling and supplier diversification.</div><div class="chips"><span class="chip">CRMA</span><span class="chip">benchmarks</span><span class="chip">proprietary</span></div><div class="resource-actions"><button class="mini-btn">Preview</button><button class="mini-btn">Lineage</button></div></div>
+        <div class="tile sp4 resource-card" data-rtype="report" data-tier="public"><h3>Data quality &amp; assurance framework</h3><div class="meta">Technical note · Public · version 2.1</div><div class="desc">Explains completeness, accuracy, consistency, timeliness, validity, traceability and publication controls.</div><div class="chips"><span class="chip">assurance</span><span class="chip">governance</span><span class="chip">lineage</span></div><div class="resource-actions"><button class="mini-btn">Read</button><button class="mini-btn">Download metadata</button></div></div>
+      </div></section>
+
+      <!-- API -->
+      <section class="page" id="p-api"><div class="grid">
+        <div class="tile sp8"><h3>API &amp; developer access</h3><p class="finding">The same governed intelligence can be consumed programmatically with entitlement-aware endpoints and explicit metadata.</p><p class="sub">illustrative developer portal concept · endpoints, authentication, versioning and usage controls</p>
+          <div class="api-endpoint"><span class="verb">GET</span>/v1/commodities/{commodity}/dependency</div>
+          <div class="api-endpoint" style="margin-top:6px"><span class="verb">GET</span>/v1/trade/flows?commodity=nickel&amp;period=2025</div>
+          <div class="api-endpoint" style="margin-top:6px"><span class="verb">GET</span>/v1/crma/benchmarks</div>
+          <div class="api-endpoint" style="margin-top:6px"><span class="verb">GET</span>/v1/resources?type=dataset&amp;tag=rare-earths</div>
+          <span class="tier d">API design · illustrative</span></div>
+        <div class="tile sp4"><h3>Access &amp; service</h3><p class="sub">example controls</p><div class="api-stat"><span>Authentication</span><b>OAuth 2.0 / client credentials</b></div><div class="api-stat"><span>Current version</span><b>v1</b></div><div class="api-stat"><span>Rate limit</span><b>1,000 requests / hour</b></div><div class="api-stat"><span>Response</span><b>JSON</b></div><div class="api-stat"><span>Entitlements</span><b>Public · Partner · Internal</b></div><div class="api-stat"><span>Lineage metadata</span><b>Included</b></div></div>
+        <div class="tile sp7"><h3>Example request</h3><p class="sub">dependency profile for nickel</p><div class="codebox">curl -H "Authorization: Bearer &lt;token&gt;" \
+  "https://api.m2i.example/v1/commodities/nickel/dependency?period=2025"</div></div>
+        <div class="tile sp5"><h3>Example response</h3><p class="sub">selected fields</p><div class="codebox">{
+  "commodity": "Nickel",
+  "period": "2025",
+  "import_reliance_pct": 56,
+  "supply_risk_score": 1.9,
+  "top_supplier": "Russia",
+  "top_supplier_share_pct": 34,
+  "data_tier": "derived",
+  "source": "Comext",
+  "last_updated": "2026-09-15"
+}</div></div>
+        <div class="tile sp6"><h3>Developer documentation</h3><p class="sub">what a production portal would expose</p><table><tbody><tr><td><a class="doclink" href="#">Quick start &amp; authentication</a></td><td>tokens, environments, first request</td></tr><tr><td><a class="doclink" href="#">Endpoint reference</a></td><td>parameters, schemas, examples</td></tr><tr><td><a class="doclink" href="#">Data dictionary</a></td><td>fields, units, null handling</td></tr><tr><td><a class="doclink" href="#">Methodology &amp; lineage</a></td><td>source, calculation, transformation</td></tr><tr><td><a class="doclink" href="#">Changelog</a></td><td>version and breaking changes</td></tr></tbody></table></div>
+        <div class="tile sp6"><h3>API governance</h3><p class="sub">controls carried from the analytical platform</p><div class="check"><i class="y">✓</i>Entitlements enforced at request time</div><div class="check"><i class="y">✓</i>Dataset version and freshness returned in metadata</div><div class="check"><i class="y">✓</i>Restricted-use fields excluded from unauthorised responses</div><div class="check"><i class="y">✓</i>Usage logged for audit and service monitoring</div><div class="check"><i class="y">✓</i>Breaking changes managed through versioned endpoints</div></div>
+      </div></section>
+
+    </div>
+  </div>
+  <div class="footer"><span>How this is used: the mock-up comes first, so stakeholders have something to explore and agree the look and feel on while the Power BI model behind it is built; the accompanying Power BI work sample implements these pages. Dashboard figures are illustrative, not M2i data. Every tile carries its data tier; restricted-use tiles never offer a table export. Production implementation would use colour-independent status indicators, configured tab order and accessible alt text.</span><span>Liz Barnes, Special Dimension · companion to the M2i approach note</span></div>
+</div>
+
+<div class="modal-backdrop" id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+  <div class="modal" style="width:min(650px,94vw)">
+    <div class="modal-head"><div><h2 id="info-title">Measure &amp; methodology</h2><p id="info-subtitle">Visual metadata</p></div><button class="modal-close" id="info-close" type="button" aria-label="Close methodology">×</button></div>
+    <div class="modal-body"><dl class="method-grid" id="info-body"></dl><p class="info-why"><b>Why every tile has one.</b> Two figures should only be compared once their bases match, so each measure states its basis where the reader is looking, not in a separate document. In Power BI these six lines are one row per measure in a measure basis register held in the model, shown through the visual’s info button or a tooltip page, so the text on screen and the documentation cannot drift apart.</p></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="glossary-modal" role="dialog" aria-modal="true" aria-labelledby="glossary-title" aria-hidden="true">
+  <div class="modal" role="document">
+    <div class="modal-head">
+      <div><h2 id="glossary-title">Glossary &amp; methodology</h2><p>Definitions used in this illustrative M2i Power BI work sample</p></div>
+      <button class="modal-close" id="glossary-close" type="button" aria-label="Close glossary">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="gloss-intro"><b>Important:</b> all figures are illustrative rather than M2i production data. Where this mock-up uses a screening rule, weighting choice or migration tolerance, it is labelled as a sample analytical method—not as an established M2i methodology. CRMA percentages shown below are regulatory benchmarks used for demonstration.</div>
+      <div class="gloss-grid">
+        <div>
+          <div class="gloss-section"><h3>Commodity &amp; risk measures</h3>
+            <div class="term"><b>Import reliance</b> — share of apparent consumption supplied by imports. The headline portfolio KPI is volume-weighted so larger commodity flows contribute proportionately.<div class="formula">Portfolio reliance = Σ(reliance % × import volume) ÷ Σ(import volume)</div></div>
+            <div class="term"><b>High-dependency / high-risk</b> — illustrative screening rule used in this sample: import reliance &gt;80% and supply risk &gt;3. It is a demonstration threshold, not an asserted M2i standard.</div>
+            <div class="term"><b>Supply risk</b> — illustrative composite risk score representing vulnerability of supply. Higher values indicate greater risk. In a production implementation, the exact source fields, transformations and scoring methodology would be documented in the semantic model/data catalogue.</div>
+            <div class="term"><b>Economic importance</b> — illustrative relative importance score used as the second axis of the risk matrix. Higher values indicate greater economic significance.</div>
+            <div class="term"><b>Import volume</b> — 2025 import quantity expressed in kilotonnes (kt) for commodities in the current filter context.</div>
+            <div class="term"><b>TTM change</b> — trailing-twelve-month change in the indexed price series; here December 2025 versus January 2025, where January = 100.</div>
+          </div>
+          <div class="gloss-section"><h3>CRMA benchmarks</h3>
+            <div class="term"><b>Extraction / processing / recycling</b> — sample tracker against the EU Critical Raw Materials Act 2030 benchmarks shown in this mock-up: 10% extraction, 40% processing and 25% recycling of annual EU consumption.</div>
+            <div class="term"><b>65% diversification threshold</b> — benchmark used here to flag where more than 65% of EU annual consumption of a strategic raw material at a relevant processing stage is supplied from a single third country.<small>The chart is an analytical monitoring aid; it does not imply that 65% is an operational prohibition or automatic compliance verdict.</small></div>
+          </div>
+          <div class="gloss-section"><h3>Trade concentration</h3>
+            <div class="term"><b>HHI (Herfindahl–Hirschman Index)</b> — concentration measure calculated as the sum of squared supplier market shares. A higher HHI indicates supply concentrated among fewer countries.<div class="formula">HHI = Σ(supplier share × 100)²</div><small>This sample marks 2,500 as a concentration reference line for interpretation.</small></div>
+            <div class="term"><b>Portfolio HHI</b> — where multiple commodity groups are selected, the displayed HHI is weighted by import value/volume in the sample rather than taking a simple average of group indices.</div>
+            <div class="term"><b>Net trade</b> — imports less exports for the selected commodity group(s), shown alongside monthly import and export values.</div>
+          </div>
+        </div>
+        <div>
+          <div class="gloss-section"><h3>Info buttons and the measure basis register</h3>
+            <div class="term"><b>The i on a tile</b>: opens the basis of that figure in six lines. It answers “what exactly is this a number of?” before anyone compares it with another figure, on this platform or elsewhere.</div>
+            <div class="term"><b>Measure</b>: what is counted. <b>Method</b>: how it is calculated, including any weighting or threshold. <b>Scope</b>: which commodities, geography and filter context apply. <b>Source</b>: where the data comes from and its tier. <b>Transformation</b>: what was done between source and tile. <b>Freshness</b>: the period covered and when it was last refreshed.</div>
+            <div class="term"><b>Measure basis register</b>: the table behind the buttons, one row per measure. In Power BI it lives in the semantic model, so the popup text, the documentation and the handover pack are the same rows, maintained once.</div>
+          </div>
+          <div class="gloss-section"><h3>Data provenance &amp; access</h3>
+            <div class="term"><b>Derived</b> — metric produced from source data using documented transformations or calculations. Where known, the sample badge also names the underlying source family, e.g. Comext.</div>
+            <div class="term"><b>Proprietary</b> — information or analytical logic treated as an M2i-owned/intelligence layer in this mock-up.</div>
+            <div class="term"><b>Restricted-use</b> — data subject to tighter contractual, licensing or role-based access controls. The sample assumes restricted-use tiles do not expose table export.</div>
+            <div class="term"><b>Viewing as: Internal</b> — illustrative row-level/role-based security context. A production model would map authorised groups/roles to the semantic model.</div>
+          </div>
+          <div class="gloss-section"><h3>Data quality &amp; release assurance</h3>
+            <div class="term"><b>Reconciled</b> — dataset has passed its defined comparison/check process with no unresolved break relevant to release.</div>
+            <div class="term"><b>Held</b> — publication is stopped pending resolution or explicit manual release.</div>
+            <div class="term"><b>Release gate</b> — all mandatory checks must pass before a dataset is published. The six checks in this work sample demonstrate the control pattern rather than prescribe M2i's production gate.</div>
+            <div class="term"><b>Open break</b> — unresolved discrepancy between the expected/reference value and the produced dataset.</div>
+            <div class="term"><b>Refresh target</b> — illustrative service target used to distinguish normal, slow and failed semantic-model refreshes.</div>
+          </div>
+          <div class="gloss-section"><h3>Power BI → Fabric migration</h3>
+            <div class="term"><b>Bronze / Silver / Gold</b> — common medallion pattern: Bronze retains landed/raw source data; Silver contains cleaned/conformed transformations; Gold contains business-ready analytical outputs.</div>
+            <div class="term"><b>Semantic model</b> — governed analytical layer containing relationships, measures, security roles and business definitions consumed by Power BI or other reporting experiences.</div>
+            <div class="term"><b>Row-level comparison</b> — old/reference and rebuilt outputs are compared at the lowest practical grain before retirement approval. This sample uses commodity-month rows.</div>
+            <div class="term"><b>Migration tolerance</b> — this sample treats values as matching within 0.01 EUR m. A production tolerance would be agreed per dataset/measure, based on materiality and rounding behaviour.</div>
+            <div class="term"><b>Retirement rule</b> — the Power BI reference remains live while a material comparison break exists; retirement becomes eligible only once agreed reconciliation evidence is clean.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+var glossaryOpen=document.getElementById('glossary-open'),glossaryModal=document.getElementById('glossary-modal'),glossaryClose=document.getElementById('glossary-close');
+function openGlossary(){glossaryModal.classList.add('open');glossaryModal.setAttribute('aria-hidden','false');glossaryClose.focus()}
+function closeGlossary(){glossaryModal.classList.remove('open');glossaryModal.setAttribute('aria-hidden','true');glossaryOpen.focus()}
+glossaryOpen.addEventListener('click',openGlossary);glossaryClose.addEventListener('click',closeGlossary);
+glossaryModal.addEventListener('click',function(e){if(e.target===glossaryModal)closeGlossary()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&glossaryModal.classList.contains('open'))closeGlossary()});
+
+var INFO={
+'High-dependency / high-risk commodities':{measure:'Count of commodities meeting the sample screening rule.',method:'Import reliance >80% AND supply risk >3.',scope:'Current commodity-group filter; 2025 observation period.',source:'Illustrative sample data.',transform:'Derived screening flag in the semantic layer.',fresh:'Data period Jan–Dec 2025; mock-up refreshed 15 Sep 2026.'},
+'Import reliance':{measure:'Share of apparent consumption supplied by imports.',method:'Portfolio KPI is volume-weighted: Σ(reliance × import volume) ÷ Σ(import volume).',scope:'Current commodity-group filter; 2025.',source:'Illustrative sample data.',transform:'Derived measure.',fresh:'Jan–Dec 2025.'},
+'Import volume':{measure:'Total imported quantity.',method:'Sum of commodity import volumes in current filter context.',scope:'2025; kilotonnes.',source:'Illustrative sample data.',transform:'Aggregated derived measure.',fresh:'Jan–Dec 2025.'},
+'Price index, TTM change':{measure:'Change in the selected group price index across the displayed period.',method:'(Dec index − Jan index) ÷ Jan index.',scope:'Jan–Dec 2025; Jan 2025 = 100.',source:'Illustrative indexed price series.',transform:'Derived measure.',fresh:'Jan–Dec 2025.'},
+'EU import reliance':{measure:'Commodity-level import reliance.',method:'Share of apparent consumption imported; colour bands are sample interpretation bands.',scope:'Commodities in current filter; 2025.',source:'Illustrative sample data.',transform:'Derived metric; 80% band is demonstrative, not an M2i standard.',fresh:'Jan–Dec 2025.'},
+'Supply risk against economic importance':{measure:'Two-dimensional screening of supply vulnerability and economic importance.',method:'Illustrative risk score on x-axis, economic-importance score on y-axis; bubble size = import volume.',scope:'Current commodity filter; 2025.',source:'Illustrative sample scores.',transform:'Derived analytical view.',fresh:'Jan–Dec 2025.'},
+'Price index, trailing twelve months':{measure:'Indexed price movement by commodity group.',method:'Monthly group series rebased to Jan 2025 = 100.',scope:'Jan–Dec 2025.',source:'Illustrative sample price series.',transform:'Derived index.',fresh:'Jan–Dec 2025.'},
+'CRMA benchmark tracker':{measure:'Illustrative EU domestic share against CRMA 2030 reference levels.',method:'Extraction 10%; processing 40%; recycling 25%.',scope:'2025 sample position vs 2030 benchmarks.',source:'CRMA benchmarks plus illustrative M2i values.',transform:'Benchmark comparison.',fresh:'2025 observation period.'},
+'Top partner countries, EU imports':{measure:'Share of EU import value by partner country.',method:'Partner import value ÷ total import value.',scope:'Current commodity filter; extra-EU trade; 2025.',source:'Illustrative Comext-derived data.',transform:'Country-share aggregation.',fresh:'Jan–Dec 2025.'},
+'EU import value, monthly':{measure:'Monthly imports, exports and net trade.',method:'Net trade = imports − exports.',scope:'Current commodity filter; EUR bn; 2025.',source:'Illustrative Comext-derived data.',transform:'Monthly aggregation.',fresh:'Jan–Dec 2025.'},
+'Supplier concentration':{measure:'Herfindahl–Hirschman Index for supplier-country concentration.',method:'HHI = Σ(supplier share × 100)²; sample reference line at 2,500.',scope:'Current commodity filter; Dec 2025.',source:'Illustrative Comext-derived data.',transform:'Import-weighted portfolio HHI where multiple groups are selected.',fresh:'Dec 2025.'},
+'Concentration over the year':{measure:'Monthly supplier concentration trend.',method:'HHI calculated each month; 2,500 shown as an interpretation reference.',scope:'Current commodity filter; Jan–Dec 2025.',source:'Illustrative Comext-derived data.',transform:'Monthly derived HHI.',fresh:'Jan–Dec 2025.'},
+'Largest single third-country supplier':{measure:'Largest supplier-country share for each commodity.',method:'Maximum third-country share compared with the CRMA 65% diversification benchmark.',scope:'Selected commodities; 2025.',source:'Illustrative trade data and CRMA benchmark.',transform:'Top-supplier share and benchmark flag.',fresh:'2025 observation period.'},
+'Above the 65% benchmark':{measure:'Count of commodities above the CRMA diversification reference point.',method:'Count where largest third-country supplier share >65%.',scope:'Current commodity filter; 2025.',source:'Illustrative trade data and CRMA benchmark.',transform:'Derived count.',fresh:'2025 observation period.'},
+'Data quality dimensions':{measure:'Assurance taxonomy used to structure operational controls.',method:'Completeness, accuracy, consistency, timeliness, validity & traceability.',scope:'Illustrative operating model.',source:'Sample control framework informed by regulatory-reporting practice.',transform:'Control classification, not a calculated metric.',fresh:'Current-state design concept.'},
+'Refresh health, last thirty days':{measure:'Semantic-model refresh duration and failures.',method:'Bars show minutes; target line = 20 minutes; failed runs displayed separately.',scope:'Rolling 30-day operational window.',source:'Illustrative platform telemetry.',transform:'Operational monitoring.',fresh:'Through 15 Sep 2026.'},
+'Release gate: Prices (Pink Sheet), September':{measure:'Mandatory checks required before publication.',method:'All six checks must pass; any failed mandatory check keeps the gate closed.',scope:'September release cycle.',source:'Illustrative control register.',transform:'Boolean release-gate measure.',fresh:'Mock-up state as at 15 Sep 2026.'},
+'Reconciliation status by dataset':{measure:'Dataset-level reconciliation and hold status.',method:'Status reflects latest completed control check and unresolved breaks.',scope:'Datasets in the sample operating register.',source:'Illustrative reconciliation register.',transform:'Operational status view.',fresh:'Dates shown per dataset.'},
+'Power BI → Fabric migration assurance':{measure:'Retirement eligibility of the legacy/reference implementation.',method:'Reference remains live until agreed row-level comparison evidence is clean.',scope:'Illustrative Power BI-to-Fabric migration.',source:'Sample migration-control register.',transform:'Control verdict.',fresh:'Current mock-up state.'},
+'Row-level comparison: Fabric rebuild minus Power BI reference':{measure:'Difference between rebuilt and reference outputs at commodity-month grain.',method:'Fabric value − Power BI reference; sample tolerance = 0.01 EUR m.',scope:'144 commodity-month rows for 2025.',source:'Illustrative migration comparison.',transform:'Row-level reconciliation.',fresh:'2025 comparison population.'},
+'Migration register':{measure:'Inventory of transformations, measures and controls considered for migration.',method:'Records current location, Fabric target, whether logic moves, and evidence required.',scope:'Illustrative migration scope.',source:'Sample architecture/control register.',transform:'Governance record.',fresh:'Current target-state design.'},
+'Resource library':{measure:'Governed catalogue of reports, datasets, methods and briefings.',method:'Search and filter by asset type, access tier and metadata; each item exposes provenance and freshness.',scope:'Illustrative platform concept.',source:'Sample catalogue entries.',transform:'Metadata-driven discovery layer.',fresh:'Current mock-up concept.'},
+'API & developer access':{measure:'Programmatic access to governed M2i intelligence.',method:'Versioned REST-style endpoints with entitlement-aware responses and metadata.',scope:'Illustrative developer-portal concept.',source:'Sample API design.',transform:'Service layer over curated datasets and semantic definitions.',fresh:'Current mock-up concept.'},
+'Access & service':{measure:'Operational and security characteristics of API access.',method:'Illustrative authentication, rate limiting, versioning and entitlement controls.',scope:'Developer access concept.',source:'Sample service design.',transform:'API governance metadata.',fresh:'Current mock-up concept.'},
+'API governance':{measure:'Controls applied to programmatic data delivery.',method:'Entitlements, freshness metadata, restricted-field suppression, logging and endpoint versioning.',scope:'Illustrative control framework.',source:'Sample API operating model.',transform:'Service-control design.',fresh:'Current mock-up concept.'}
+};
+var infoModal=document.getElementById('info-modal'),infoClose=document.getElementById('info-close'),infoBody=document.getElementById('info-body'),lastInfoButton=null;
+function openInfo(title,button){var x=INFO[title]||{measure:'Context for this visual.',method:'See the main glossary for methodology.',scope:'Illustrative work sample.',source:'Illustrative data.',transform:'As labelled on the visual.',fresh:'See report header.'};document.getElementById('info-title').textContent=title;document.getElementById('info-subtitle').textContent='Measure, scope, source, transformation and freshness';infoBody.innerHTML='<dt>Measure</dt><dd>'+x.measure+'</dd><dt>Method</dt><dd>'+x.method+'</dd><dt>Scope</dt><dd>'+x.scope+'</dd><dt>Source</dt><dd>'+x.source+'</dd><dt>Transformation</dt><dd>'+x.transform+'</dd><dt>Freshness</dt><dd>'+x.fresh+'</dd>';lastInfoButton=button;infoModal.classList.add('open');infoModal.setAttribute('aria-hidden','false');infoClose.focus()}
+function closeInfo(){infoModal.classList.remove('open');infoModal.setAttribute('aria-hidden','true');if(lastInfoButton)lastInfoButton.focus()}
+infoClose.addEventListener('click',closeInfo);infoModal.addEventListener('click',function(e){if(e.target===infoModal)closeInfo()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&infoModal.classList.contains('open'))closeInfo()});
+document.querySelectorAll('.tile h3').forEach(function(h){var title=h.textContent.trim();if(!INFO[title])return;var tile=h.closest('.tile'),b=document.createElement('button');b.className='info-btn';b.type='button';b.textContent='i';b.setAttribute('aria-label','Methodology for '+title);b.addEventListener('click',function(){openInfo(title,b)});tile.appendChild(b)});
+
+var GN={battery:'Battery metals',magnet:'Magnet metals',base:'Base metals'};
+var C=[{n:'Lithium',g:'battery',rel:79,sr:4.1,ei:5.9,vol:312,top:'Chile',ts:58},{n:'Cobalt',g:'battery',rel:81,sr:3.8,ei:6.2,vol:89,top:'DR Congo',ts:63},{n:'Nickel',g:'battery',rel:56,sr:1.9,ei:6.4,vol:1205,top:'Russia',ts:34},{n:'Graphite',g:'battery',rel:98,sr:3.4,ei:4.5,vol:426,top:'China',ts:68},{n:'Manganese',g:'battery',rel:94,sr:2.6,ei:5.1,vol:2150,top:'South Africa',ts:41},{n:'Rare earths',g:'magnet',rel:99,sr:5.2,ei:5.3,vol:19,top:'China',ts:98},{n:'Boron',g:'magnet',rel:100,sr:3.6,ei:3.9,vol:210,top:'Turkey',ts:66},{n:'Gallium',g:'magnet',rel:71,sr:4.6,ei:3.7,vol:1,top:'China',ts:71},{n:'Copper',g:'base',rel:44,sr:1.1,ei:7.1,vol:3891,top:'Chile',ts:27},{n:'Aluminium',g:'base',rel:58,sr:1.4,ei:7.6,vol:6420,top:'Norway',ts:25},{n:'Zinc',g:'base',rel:31,sr:0.9,ei:5.6,vol:1130,top:'Peru',ts:22},{n:'Tin',g:'base',rel:83,sr:2.7,ei:3.2,vol:68,top:'Indonesia',ts:44}];
+var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var IDX={battery:[100,97,94,96,101,104,103,108,112,110,115,118],magnet:[100,103,109,114,112,118,121,119,126,131,129,134],base:[100,101,103,102,105,104,107,106,105,108,110,109]};
+var HHI={battery:[2210,2260,2320,2400,2470,2510,2580,2640,2700,2760,2810,2860],magnet:[5100,5150,5230,5300,5360,5420,5450,5500,5560,5610,5650,5700],base:[900,910,930,940,960,970,990,1000,1010,1020,1040,1050]};
+var TR={battery:{imp:[1.6,1.5,1.7,1.7,1.8,1.9,2.0,1.8,1.9,2.1,2.1,2.0],exp:[0.3,0.3,0.3,0.3,0.4,0.4,0.4,0.4,0.4,0.4,0.5,0.4]},magnet:{imp:[0.21,0.2,0.22,0.24,0.25,0.26,0.29,0.31,0.3,0.33,0.34,0.32],exp:[0.05,0.05,0.05,0.06,0.06,0.06,0.06,0.06,0.07,0.07,0.07,0.07]},base:{imp:[3.3,3.2,3.5,3.3,3.6,3.4,3.5,3.3,3.5,3.5,3.6,3.5],exp:[2.0,1.9,2.2,2.1,2.2,2.2,2.2,2.1,2.3,2.3,2.3,2.3]}};
+var PART={all:[['China',31],['Chile',9],['Russia',8],['South Africa',7],['Norway',6],['Indonesia',5],['Other',34]],battery:[['China',43],['Chile',14],['Indonesia',11],['DR Congo',9],['Australia',6],['Other',17]],magnet:[['China',72],['Malaysia',7],['Japan',4],['USA',4],['Other',13]],base:[['Chile',18],['Russia',15],['Norway',12],['Peru',9],['China',8],['Other',38]]};
+var CRMA={all:{ex:3.4,pr:16,re:11},battery:{ex:1.2,pr:9,re:6},magnet:{ex:0.3,pr:4,re:2},base:{ex:6.1,pr:28,re:19}};
+var REF=[14,15,13,16,14,15,31,14,13,15,14,0,15,16,14,13,15,14,29,14,15,13,14,16,0,15,14,13,15,14];
+var COL={battery:'#4f6b4a',magnet:'#b98a2c',base:'#2f3a45'};
+var g='all';
+function S(t,a){var e=document.createElementNS('http://www.w3.org/2000/svg',t);for(var k in a)e.setAttribute(k,a[k]);return e}
+function T(sv,x,y,s,a){var t=S('text',a||{});t.setAttribute('x',x);t.setAttribute('y',y);t.textContent=s;sv.appendChild(t);return t}
+function groups(){return g==='all'?['battery','magnet','base']:[g]}
+function inScope(){return C.filter(function(c){return g==='all'||c.g===g})}
+function fmt(n){return n.toLocaleString('en-GB')}
+function relCol(r){return r>80?'#a4432e':(r>=50?'#b98a2c':'#4f6b4a')}
+
+function drawCommodity(){
+  var d=inScope(); var sv;
+  var vol=d.reduce(function(a,c){return a+c.vol},0);
+  var rel=d.reduce(function(a,c){return a+c.rel*c.vol},0)/vol;
+  var watch=d.filter(function(c){return c.rel>80&&c.sr>3}).length;
+  document.getElementById('k-watch').textContent=watch; document.getElementById('k-n').textContent=d.length;
+  document.getElementById('k-rel').textContent=Math.round(rel)+'%'; document.getElementById('k-vol').textContent=fmt(vol);
+  var gs=groups(); var idx=M.map(function(_,i){return gs.reduce(function(a,k){return a+IDX[k][i]},0)/gs.length});
+  var ttm=(idx[11]-idx[0])/idx[0]; var kt=document.getElementById('k-ttm'); kt.textContent=(ttm>=0?'+':'')+Math.round(ttm*100)+'%'; kt.className='v '+(ttm>0.15?'':'slate');
+  // reliance bars
+  sv=document.getElementById('c-rel'); sv.innerHTML=''; var s=d.slice().sort(function(a,b){return b.rel-a.rel}); var rh=Math.min(22,270/s.length);
+  s.forEach(function(c,i){var y=8+i*rh;T(sv,92,y+rh*.7,c.n,{'text-anchor':'end'});sv.appendChild(S('rect',{x:98,y:y+2,width:290*c.rel/100,height:rh-6,fill:relCol(c.rel)}));T(sv,102+290*c.rel/100,y+rh*.7,c.rel+'%',{fill:'#5a6470'})});
+  // risk scatter
+  sv=document.getElementById('c-risk'); sv.innerHTML=''; var L=44,Tp=12,W=490,H=250;
+  sv.appendChild(S('rect',{x:L+W*3/6,y:Tp,width:W*3/6,height:H,fill:'#f5efe4'}));
+  [1,2,3,4,5,6].forEach(function(v){var x=L+W*v/6;sv.appendChild(S('line',{x1:x,x2:x,y1:Tp,y2:Tp+H,'class':'grid-l'}));T(sv,x,Tp+H+14,String(v),{'text-anchor':'middle'})});
+  [2,4,6,8].forEach(function(v){var y=Tp+H-H*v/8;sv.appendChild(S('line',{x1:L,x2:L+W,y1:y,y2:y,'class':'grid-l'}));T(sv,L-6,y+3,String(v),{'text-anchor':'end'})});
+  T(sv,L+W/2,Tp+H+26,'supply risk →',{'text-anchor':'middle'}); T(sv,12,Tp+H/2,'economic importance ↑',{transform:'rotate(-90 12 '+(Tp+H/2)+')','text-anchor':'middle'});
+  d.forEach(function(c){var x=L+W*c.sr/6,y=Tp+H-H*c.ei/8,r=5+Math.sqrt(c.vol)/5;sv.appendChild(S('circle',{cx:x,cy:y,r:r,fill:COL[c.g],'fill-opacity':.55,stroke:COL[c.g]}));T(sv,x+r+3,y+3,c.n,{fill:'#22262b'})});
+  // index lines
+  sv=document.getElementById('c-idx'); sv.innerHTML=''; L=36;Tp=10;W=470;H=140;
+  var lo=90,hi=140; [90,100,110,120,130,140].forEach(function(v){var y=Tp+H-H*(v-lo)/(hi-lo);sv.appendChild(S('line',{x1:L,x2:L+W,y1:y,y2:y,'class':v===100?'':'grid-l',stroke:v===100?'#8a9099':undefined}));T(sv,L-6,y+3,String(v),{'text-anchor':'end'})});
+  M.forEach(function(m,i){T(sv,L+W*i/11,Tp+H+14,m,{'text-anchor':'middle'})});
+  gs.forEach(function(k){var p=IDX[k].map(function(v,i){return (L+W*i/11)+','+(Tp+H-H*(v-lo)/(hi-lo))}).join(' ');sv.appendChild(S('polyline',{points:p,fill:'none',stroke:COL[k],'stroke-width':2}));T(sv,L+W+4,Tp+H-H*(IDX[k][11]-lo)/(hi-lo)+3,GN[k].split(' ')[0],{fill:COL[k]})});
+  // CRMA
+  sv=document.getElementById('c-crma'); sv.innerHTML=''; var cr=CRMA[g]; var rows=[['Extraction',cr.ex,10],['Processing',cr.pr,40],['Recycling',cr.re,25]];
+  rows.forEach(function(r,i){var y=14+i*52;T(sv,80,y+18,r[0],{'text-anchor':'end'});sv.appendChild(S('rect',{x:86,y:y+4,width:230*r[2]/45,height:10,fill:'#e6e1d6'}));sv.appendChild(S('rect',{x:86,y:y+16,width:230*r[1]/45,height:12,fill:'#b98a2c'}));T(sv,90+230*r[1]/45,y+26,r[1]+'% in 2025',{fill:'#5a6470'});T(sv,90+230*r[2]/45,y+12,r[2]+'% benchmark 2030',{fill:'#8a9099'})});
+}
+function drawTrade(){
+  var sv; var gs=groups(); var d=inScope();
+  sv=document.getElementById('t-part'); sv.innerHTML=''; var p=PART[g]; var rh=Math.min(30,250/p.length);
+  p.forEach(function(r,i){var y=10+i*rh;T(sv,92,y+rh*.65,r[0],{'text-anchor':'end'});sv.appendChild(S('rect',{x:98,y:y+3,width:290*r[1]/80,height:rh-8,fill:r[0]==='Other'?'#c9c4b8':'#2f3a45'}));T(sv,102+290*r[1]/80,y+rh*.65,r[1]+'%',{fill:'#5a6470'})});
+  sv=document.getElementById('t-imp'); sv.innerHTML=''; var L=40,Tp=12,W=490,H=220;
+  var imp=M.map(function(_,i){return gs.reduce(function(a,k){return a+TR[k].imp[i]},0)}),exp=M.map(function(_,i){return gs.reduce(function(a,k){return a+TR[k].exp[i]},0)});
+  var mx=Math.max.apply(null,imp)*1.15; [0.25,0.5,0.75,1].forEach(function(f){var y=Tp+H-H*f;sv.appendChild(S('line',{x1:L,x2:L+W,y1:y,y2:y,'class':'grid-l'}));T(sv,L-6,y+3,(mx*f).toFixed(1),{'text-anchor':'end'})});
+  var bw=W/12; M.forEach(function(m,i){var x=L+bw*i;sv.appendChild(S('rect',{x:x+4,y:Tp+H-H*imp[i]/mx,width:bw*.38,height:H*imp[i]/mx,fill:'#2f3a45'}));sv.appendChild(S('rect',{x:x+4+bw*.4,y:Tp+H-H*exp[i]/mx,width:bw*.38,height:H*exp[i]/mx,fill:'#b98a2c'}));T(sv,x+bw/2,Tp+H+14,m,{'text-anchor':'middle'})});
+  var net=M.map(function(_,i){return (L+bw*i+bw/2)+','+(Tp+H-H*(imp[i]-exp[i])/mx)}).join(' '); sv.appendChild(S('polyline',{points:net,fill:'none',stroke:'#a4432e','stroke-width':2,'stroke-dasharray':'4 3'}));
+  T(sv,L+W,Tp+8,'imports',{fill:'#2f3a45','text-anchor':'end'});T(sv,L+W,Tp+20,'exports',{fill:'#b98a2c','text-anchor':'end'});T(sv,L+W,Tp+32,'net deficit',{fill:'#a4432e','text-anchor':'end'});
+  var w=gs.reduce(function(a,k){return a+HHI[k][11]*TR[k].imp[11]},0)/gs.reduce(function(a,k){return a+TR[k].imp[11]},0);
+  document.getElementById('t-hhi').textContent=fmt(Math.round(w)); document.getElementById('t-hhik').textContent=w>2500?'concentrated supplier base (HHI above 2,500)':'below the 2,500 concentration threshold';
+  sv=document.getElementById('t-hhic'); sv.innerHTML=''; L=40;Tp=10;W=270;H=125; var hh=M.map(function(_,i){return gs.reduce(function(a,k){return a+HHI[k][i]*TR[k].imp[i]},0)/gs.reduce(function(a,k){return a+TR[k].imp[i]},0)});
+  var hmax=6000; [2500].forEach(function(v){var y=Tp+H-H*v/hmax;sv.appendChild(S('line',{x1:L,x2:L+W,y1:y,y2:y,stroke:'#a4432e','stroke-dasharray':'3 3'}));T(sv,L+W,y-3,'2,500',{fill:'#a4432e','text-anchor':'end'})});
+  [0,2000,4000,6000].forEach(function(v){var y=Tp+H-H*v/hmax;T(sv,L-6,y+3,fmt(v),{'text-anchor':'end'})});
+  sv.appendChild(S('polyline',{points:hh.map(function(v,i){return (L+W*i/11)+','+(Tp+H-H*v/hmax)}).join(' '),fill:'none',stroke:'#2f3a45','stroke-width':2}));
+  [0,3,6,9,11].forEach(function(i){T(sv,L+W*i/11,Tp+H+14,M[i],{'text-anchor':'middle'})});
+  sv=document.getElementById('t-single'); sv.innerHTML=''; var s=d.slice().sort(function(a,b){return b.ts-a.ts}).slice(0,7); rh=Math.min(22,150/s.length);
+  var cx=96+220*.65; sv.appendChild(S('line',{x1:cx,x2:cx,y1:2,y2:6+s.length*rh,stroke:'#a4432e','stroke-dasharray':'3 3'}));
+  s.forEach(function(c,i){var y=6+i*rh;T(sv,90,y+rh*.7,c.n,{'text-anchor':'end'});sv.appendChild(S('rect',{x:96,y:y+2,width:220*c.ts/100,height:rh-6,fill:c.ts>65?'#a4432e':'#4f6b4a'}));var lx=100+220*c.ts/100; if(lx<cx+4&&lx>cx-70){lx=cx+5} T(sv,lx,y+rh*.7,c.top+' '+c.ts+'%',{fill:'#5a6470'})});
+  document.getElementById('t-over').textContent=d.filter(function(c){return c.ts>65}).length;
+}
+function drawHealth(){
+  var sv=document.getElementById('h-ref'); sv.innerHTML=''; var L=30,Tp=10,W=515,H=120,mx=35;
+  [10,20,30].forEach(function(v){var y=Tp+H-H*v/mx;sv.appendChild(S('line',{x1:L,x2:L+W,y1:y,y2:y,'class':v===20?'':'grid-l',stroke:v===20?'#a4432e':undefined,'stroke-dasharray':v===20?'3 3':undefined}));T(sv,L-6,y+3,String(v),{'text-anchor':'end'})});
+  var bw=W/30; REF.forEach(function(v,i){var f=v===0?'#a4432e':(v>20?'#b98a2c':'#4f6b4a');var h=v===0?4:H*v/mx;sv.appendChild(S('rect',{x:L+bw*i+2,y:Tp+H-h,width:bw-4,height:h,fill:f}))});
+  T(sv,L,Tp+H+14,'17 Aug',{});T(sv,L+W,Tp+H+14,'15 Sep',{'text-anchor':'end'});
+  var checks=[['Source row count matches',1],['Checksum column matches',1],['Headline figures reconciled to original',0],['Data tier recorded',1],['Transformation logic documented',1],['Refresh ran unattended twice',0]];
+  document.getElementById('h-gate').innerHTML=checks.map(function(c){return '<div class="check"><i class="'+(c[1]?'y':'n')+'">'+(c[1]?'✓':'✕')+'</i>'+c[0]+'</div>'}).join('');
+  var rec=[['Trade flows (Comext)','Derived','3 Sep',0,'g','Reconciled',''],['Production (PRODCOM)','Derived','3 Sep',0,'g','Reconciled',''],['World production (USGS)','Derived','28 Aug',0,'g','Reconciled',''],['Prices (Pink Sheet)','Derived','5 Sep',1,'b','Held','source revision to July series'],['FX (ECB)','Derived','daily',0,'g','Reconciled',''],['CRMA Tracker','Proprietary','1 Sep',0,'g','Reconciled',''],['ERMA project data','Proprietary','1 Sep',0,'g','Reconciled',''],['Battery feed','Restricted-use','—','—','b','Held','contract review'],['Usage metrics','Proprietary','—','—','x','Not built','deliverable 4']];
+  document.getElementById('h-recon').innerHTML=rec.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td><span class="st '+r[4]+'">'+(r[5]==='Reconciled'?'✓ ':r[5]==='Held'?'! ':r[5]==='Not built'?'— ':'')+r[5]+'</span></td><td>'+r[6]+'</td></tr>'}).join('');
+}
+var fixed=false;
+function drawMigration(){
+  var comm=['Lithium','Cobalt','Nickel','Graphite','Manganese','Rare earths','Boron','Gallium','Copper','Aluminium','Zinc','Tin'];
+  document.getElementById('m-head').innerHTML='<tr><th>Commodity</th>'+M.map(function(m){return '<th class="num">'+m+'</th>'}).join('')+'</tr>';
+  document.getElementById('m-body').innerHTML=comm.map(function(c){return '<tr><td>'+c+'</td>'+M.map(function(m,i){var brk=(!fixed&&c==='Nickel'&&i===2);return '<td class="'+(brk?'brk':'num')+'">'+(brk?'+1,398,000':'0')+'</td>'}).join('')+'</tr>'}).join('');
+  var v=document.getElementById('m-verdict'); v.className='verdict '+(fixed?'open':'closed'); v.textContent=fixed?'✓ Comparison clean — Power BI reference may be retired':'× NOT YET — 1 break; reference stays live';
+  document.getElementById('m-rows').textContent=fixed?'144 / 144':'143 / 144';
+  document.getElementById('m-largest').textContent=fixed?'none':'Nickel, Mar 2025: 1,398,000 EUR m';
+  document.getElementById('m-fix').textContent=fixed?'Reset the break':'Apply the fix: tonne to kilotonne on the nickel feed';
+  var reg=[['Import reliance %','DAX measure, volume-weighted','Gold column, computed in Dataflow Gen2','Yes','row-level compare of 12 commodity values'],['Trade allocation to commodity','Excel prep, outside Power BI','Silver transformation','Yes','group sums equal source to the euro'],['HHI, import-weighted','DAX measure over groups','stays in the semantic model','No','n/a'],['Price index TTM change %','DAX time intelligence','stays in the semantic model','No','n/a'],['Refresh status','Excel column','Silver derived column','Yes','30 rows, exact match'],['Release gate verdict','DAX over the checks table','checks written by the pipeline; verdict stays a measure','Partly','6 checks, exact match'],['ECB FX pull','Power Query Web.Contents','Fabric pipeline on schedule, landing in Bronze','Yes','row count per business day'],['Row-level security by tier','roles in the .pbix','roles on the Direct Lake model, groups from Entra','Yes','four role views compared']];
+  document.getElementById('m-reg').innerHTML=reg.map(function(r){var c=r[3]==='Yes'?'g':(r[3]==='Partly'?'o':'x');return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td><span class="st '+c+'">'+r[3]+'</span></td><td>'+r[4]+'</td></tr>'}).join('')
+}
+document.getElementById('m-fix').addEventListener('click',function(){fixed=!fixed;drawMigration()});
+function drawAll(){drawCommodity();drawTrade();drawHealth();drawMigration()}
+document.querySelectorAll('#slicer button').forEach(function(b){b.addEventListener('click',function(){g=b.getAttribute('data-g');document.querySelectorAll('#slicer button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});drawAll()})});
+function filterResources(){var q=(document.getElementById('resource-search')||{}).value||'';q=q.toLowerCase();var t=(document.getElementById('resource-type')||{}).value||'all';var a=(document.getElementById('resource-tier')||{}).value||'all';document.querySelectorAll('.resource-card').forEach(function(c){var okq=!q||c.textContent.toLowerCase().indexOf(q)>=0;var okt=t==='all'||c.getAttribute('data-rtype')===t;var oka=a==='all'||c.getAttribute('data-tier')===a;c.classList.toggle('hidden',!(okq&&okt&&oka))})}
+['resource-search','resource-type','resource-tier'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener(id==='resource-search'?'input':'change',filterResources)});
+document.querySelectorAll('.pages button').forEach(function(b){b.addEventListener('click',function(){var p=b.getAttribute('data-p');document.querySelectorAll('.pages button').forEach(function(x){x.setAttribute('aria-selected',String(x===b))});document.querySelectorAll('.page').forEach(function(s){s.setAttribute('data-active',String(s.id==='p-'+p))});document.getElementById('slicer').classList.toggle('nofilter',p==='library'||p==='api'||p==='health'||p==='migration')})});
+drawAll();
+</script>
+</body></html>
