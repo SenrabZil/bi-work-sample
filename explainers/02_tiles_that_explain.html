@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Lesson 02 — Tiles that explain themselves · Power BI to Fabric</title>
+<style>
+  :root{
+    --frost:#EEF3F7; --panel:#FFFFFF; --ink:#13202E; --slate:#5A6A7A;
+    --line:#D3DDE6; --deep:#0E1F33; --volt:#10B5C9; --volt-ink:#0A7E8E;
+    --ember:#E0913A; --ember-ink:#B16A12; --warm:#C2603F; --ok:#2FA980; --bad:#DD6457;
+    --hdr:rgba(238,243,247,.9);
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Consolas,"Roboto Mono",monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }}
+  :root[data-theme="dark"]{
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{margin:0;background:var(--frost);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;justify-content:space-between;align-items:center;height:52px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  .bar b{font-weight:700} .bar .r{font-family:var(--mono);color:var(--slate)}
+  .hero{padding:60px 0 26px}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt-ink);margin-bottom:16px}
+  h1{font-size:clamp(32px,5.6vw,54px);line-height:1.03;letter-spacing:-.02em;margin:0 0 16px;font-weight:780}
+  .lead{font-size:clamp(18px,2.4vw,22px);color:var(--slate);max-width:42ch;margin:0}
+  .byline{margin-top:20px;font-size:14px;color:var(--slate)} .byline b{color:var(--ink)}
+  section{padding:36px 0;border-top:1px solid var(--line)}
+  .snum{font-family:var(--mono);font-size:13px;color:var(--volt-ink);letter-spacing:.1em}
+  h2{font-size:clamp(23px,3.3vw,32px);line-height:1.12;letter-spacing:-.015em;margin:6px 0 12px;font-weight:740}
+  p{margin:0 0 16px} .muted{color:var(--slate)}
+  .say{border-left:2px solid var(--volt);padding:2px 0 2px 18px;margin:18px 0}
+  .caution{border-left:2px solid var(--ember);padding:2px 0 2px 18px;margin:18px 0;color:var(--ember-ink);font-size:15px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+  .stage{position:relative;border-radius:12px;overflow:hidden;min-height:300px}
+  .cover{position:absolute;inset:0;background:linear-gradient(180deg,var(--deep),#0a1726);color:#cfe;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .5s;z-index:4}
+  .cover.gone{opacity:0;pointer-events:none} .cover .q{font-size:16px;max-width:34ch;color:#dcebf0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px}
+  .clabel{font-family:var(--mono);font-size:12px;color:var(--slate)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:13px;border:0;background:var(--panel);color:var(--slate);padding:8px 14px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--volt);color:#04222a}
+  .btn{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer}
+  .btn:hover{border-color:var(--ember)}
+  .btn[aria-pressed=true]{background:var(--ember);border-color:var(--ember);color:#2a1500}
+  .readout{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;font-family:var(--mono);font-size:13.5px;color:var(--slate)}
+  .readout b{color:var(--ink)} .readout .big{font-size:22px;font-weight:600;color:var(--ink)}
+  .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:5px 11px}
+  .tag.up{background:#fbeae7;color:#b23a2c} .tag.dn{background:#e3f6ee;color:#1c7a59}
+  .choices{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .choice{font-family:var(--mono);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;color:var(--ink);transition:.15s;text-align:left}
+  .choice:hover{border-color:var(--volt)} .choice[aria-pressed=true]{background:var(--deep);color:#fff;border-color:var(--deep)}
+  .verdict{font-size:15px;margin-top:4px;min-height:1.4em} .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+  .rule{background:var(--deep);color:#eaf6f8;border-radius:14px;padding:24px;margin-top:8px}
+  .rule h3{margin:0 0 10px;font-size:20px;color:#fff} .rule p{color:#bcd6dc;margin:0 0 10px} .rule p:last-child{margin:0} .rule .k{color:var(--volt);font-family:var(--mono)}
+  footer{padding:48px 0;color:var(--slate);font-size:13px;border-top:1px solid var(--line)}
+  :focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:4px}
+  @media (max-width:560px){.tiles{grid-template-columns:1fr}}
+  .tile{position:relative;background:var(--frost);border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;min-height:128px}
+  .tile .tt{font-size:14px;font-weight:650;padding-right:34px;line-height:1.3}
+  .tile .tt span{font-weight:400;color:var(--slate)}
+  .tile .val{font-size:30px;font-weight:760;letter-spacing:-.01em;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+  .tile .sub{font-family:var(--mono);font-size:12px;color:var(--slate);min-height:1.5em;transition:color .3s}
+  .tile .sub.broken{color:var(--bad)}
+  .tile .chip{display:inline-block;margin-top:6px;font-family:var(--mono);font-size:10.5px;border:1px dashed var(--ember);color:var(--ember-ink);border-radius:6px;padding:1px 6px;transition:opacity .3s}
+  .tile .chip.gone{opacity:.25;text-decoration:line-through}
+  .ib{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;border:2px solid var(--volt);background:var(--panel);color:var(--volt-ink);font:italic 700 14px/1 Georgia,serif;cursor:pointer}
+  .tip{position:absolute;left:10px;right:10px;top:42px;z-index:3;background:var(--deep);color:#dcebf0;font-size:12.5px;line-height:1.45;border-radius:8px;padding:9px 11px;display:none}
+  .tip.show{display:block}
+
+  /* measure stack */
+  .stack{display:flex;height:46px;border-radius:9px;overflow:hidden;margin:10px 0 6px}
+  .stack button{border:0;color:#fff;font-family:var(--mono);font-size:12.5px;font-weight:600;cursor:pointer;padding:0 4px;opacity:.55;transition:opacity .2s}
+  .stack button[aria-pressed=true]{opacity:1}
+  .stack button:hover{opacity:.85}
+  .s1{background:#3A4A5E}.s2{background:#5F7896}.s3{background:#0A7E8E}.s4{background:#10B5C9}.s5{background:#E0913A}
+</style>
+</head>
+<body>
+<header><div class="wrap bar"><b><a href="index.html" style="color:inherit;text-decoration:none">Power BI to Fabric</a></b><span class="r">Lesson 02 · The model</span></div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Lesson 02 · Measures</div>
+    <h1>Every number<br>explains itself.</h1>
+    <p class="lead">Each tile carries its figure, where it came from, and a short explanation. The design choice behind that is why the model has 219 measures, not 122.</p>
+    <p class="byline">with <b>Elizabeth Cecilia</b>. A number nobody can explain is a number nobody should act on.</p>
+  </div>
+
+  <section>
+    <div class="snum">01</div>
+    <h2>Three things on every tile</h2>
+    <p>The <b>title</b> carries the data tier in brackets, so the reader knows how far to trust the source before reading the figure. The <b>subtitle</b> is a basis line saying which dataset and year the number comes from and how it's calculated. The <b>"i" button</b> opens a short explanation of under 200 characters, with the full version kept in a register table.</p>
+    <p>None of that text is typed into the visuals. It lives in the model as measures, bound to the subtitle and to the button's tooltip, so the wording can be changed in one place and checked by a script.</p>
+  </section>
+
+  <section>
+    <div class="snum">02</div>
+    <h2>One measure, or one per tile?</h2>
+    <p>The report has 52 tiles, and each needs its own basis line and explanation. The obvious shortcut is one shared measure that looks up the right text for whichever tile it sits on.</p>
+    <p class="say"><b>Predict first:</b> what's the safest way to drive 52 basis lines and 52 explanations?</p>
+    <div class="choices" id="mChoices" role="group" aria-label="How to drive tile text">
+      <button class="choice" data-v="shared">One shared measure, filtered per tile</button>
+      <button class="choice" data-v="each">One measure per tile, per job</button>
+      <button class="choice" data-v="typed">Type the text into each visual</button>
+    </div>
+    <div class="verdict" id="mVerdict" aria-live="polite"></div>
+
+    <div class="panel">
+      <div class="stage">
+        <div class="tiles" id="tiles"></div>
+        <div class="cover" id="mCover"><div class="q">Predict above to open the report page.</div></div>
+      </div>
+      <div class="controls">
+        <span class="clabel">design</span>
+        <div class="seg" role="group" aria-label="Design">
+          <button id="d-each" aria-pressed="true">one per tile</button>
+          <button id="d-shared" aria-pressed="false">one shared</button>
+        </div>
+        <button class="btn" id="clear" aria-pressed="false">someone clears the filters</button>
+      </div>
+      <div class="readout">
+        <span class="tag dn" id="mTag">all tiles explained</span>
+        <span><span class="muted">basis lines correct</span> <span class="big" id="mOk">4 / 4</span></span>
+        <span><span class="muted">text measures in model</span> <b id="mCount">97</b></span>
+      </div>
+    </div>
+    <p class="muted">Switch to <b>one shared</b>, then clear the filters. Try the "i" buttons too.</p>
+  </section>
+
+  <section>
+    <div class="snum">03</div>
+    <h2>Why the shortcut breaks</h2>
+    <p>A subtitle or a button tooltip can only point at a single measure. It can't pass that measure a key saying "I am the reserves tile". The only way to tell a shared measure which tile it sits on is a filter on every visual, and filters are exactly what users and other developers clear, copy and change. When that happens nothing errors. The text just goes blank or wrong, quietly, on every tile at once.</p>
+    <p>One measure per tile costs more names in the field list but nothing at run time, because they hold text rather than calculations. They're generated from the register, so nobody types 97 measures by hand, and the wording can't drift between the tile, the tooltip and the documentation.</p>
+    <p class="caution">Tiles, figures and basis wording here are illustrative. The real text lives in the model's measure register.</p>
+  </section>
+
+  <section>
+    <div class="snum">04</div>
+    <h2>Where 219 measures come from</h2>
+    <p>Click a band to see what it holds.</p>
+    <div class="panel">
+      <div class="stack" id="stack" role="group" aria-label="Measure groups">
+        <button class="s1" style="flex:47" data-k="0" aria-pressed="false">47</button>
+        <button class="s2" style="flex:75" data-k="1" aria-pressed="false">75</button>
+        <button class="s3" style="flex:37" data-k="2" aria-pressed="false">37</button>
+        <button class="s4" style="flex:21" data-k="3" aria-pressed="false">21</button>
+        <button class="s5" style="flex:39" data-k="4" aria-pressed="true">39</button>
+      </div>
+      <div class="readout" aria-live="polite">
+        <span><span class="big" id="sName">Explanations</span></span>
+        <span id="sText">One per tile, bound to the "i" button's tooltip. Under 200 characters each.</span>
+      </div>
+    </div>
+    <p class="muted">97 of the 219 are generated text measures. The other 122 are calculations: 47 core business measures and 75 added as the pages grew.</p>
+  </section>
+
+  <section>
+    <div class="snum">05</div>
+    <h2>The rule, in one breath</h2>
+    <div class="rule">
+      <h3>Every tile's text is its own measure, generated from one register.</h3>
+      <p>A shared measure looks tidier but depends on filters anyone can clear, and it fails silently. One <span class="k">measure per tile, per job</span> can't be broken by accident, costs nothing to run, and keeps the tile, the tooltip and the documentation saying the same thing.</p>
+      <p class="muted" style="color:#9fc0cb">Next: the design decisions, and what each one costs.</p>
+    </div>
+  </section>
+
+  <nav class="lessonseq" style="padding:30px 0 0;display:flex;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:13px;border-top:1px solid var(--line)">
+    <a href="01_shape_of_the_model.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%">&larr; Builds on &middot; The shape of the model</a>
+    <a href="03_design_decisions.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%;text-align:right">Next &middot; Design decisions &rarr;</a>
+  </nav>
+  <footer>Power BI to Fabric · Lesson 02. Illustrative data from a Power BI mock-up. Counts as reviewed in September 2026.</footer>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const TILES=[
+    {k:"s-prod",  t:"Mine production", tier:"tier 2", v:"290 kt",
+     b:"Basis: mine output, contained metal, latest full year",
+     x:"World mine output of the selected commodity, as contained metal. Annual, from the latest full year in the source."},
+    {k:"s-growth",t:"Production growth", tier:"tier 2", v:"+15.4%",
+     b:"Basis: change on prior year, same source and unit",
+     x:"Year-on-year change in mine output. Compares like with like: same dataset, same unit, consecutive years."},
+    {k:"s-res",   t:"Reserves", tier:"tier 3", v:"11.0 Mt",
+     b:"Basis: economic reserves, contained metal, latest estimate",
+     x:"Estimated reserves that are economic to extract today. Not total resources; revised as prices and surveys change."},
+    {k:"s-price", t:"Price", tier:"tier 1", v:"€24,000",
+     b:"Basis: annual average, €/t, reference grade",
+     x:"Average annual price per tonne for a reference grade. Licensed data, so visible only to roles allowed to see it."}
+  ];
+  let design="each", cleared=false;
+  const host=$("#tiles");
+  host.innerHTML=TILES.map((t,i)=>`
+    <div class="tile">
+      <div class="tt">${t.t} <span>(${t.tier})</span></div>
+      <button class="ib" data-i="${i}" aria-expanded="false" aria-label="Explanation for ${t.t}">i</button>
+      <div class="tip" id="tip${i}" role="note"></div>
+      <div class="val">${t.v}</div>
+      <div class="sub" id="sub${i}"></div>
+      <div class="chip" id="chip${i}" hidden>filter: key = ${t.k}</div>
+    </div>`).join("");
+
+  function render(){
+    let ok=0;
+    TILES.forEach((t,i)=>{
+      const sub=$("#sub"+i), chip=$("#chip"+i), tip=$("#tip"+i);
+      let text=t.b, tipText=t.x, broken=false;
+      if(design==="shared"){
+        chip.hidden=false; chip.classList.toggle("gone",cleared);
+        if(cleared){ text="(blank)"; tipText="(blank)"; broken=true; }
+      } else { chip.hidden=true; }
+      sub.textContent=text; sub.classList.toggle("broken",broken);
+      tip.textContent=tipText;
+      if(!broken) ok++;
+    });
+    $("#mOk").textContent=ok+" / 4";
+    $("#mCount").textContent= design==="each" ? "97" : "2";
+    const tag=$("#mTag");
+    if(ok===4){tag.className="tag dn";tag.textContent="all tiles explained";}
+    else{tag.className="tag up";tag.textContent="silent failure";}
+    ["each","shared"].forEach(d=>$("#d-"+d).setAttribute("aria-pressed",d===design?"true":"false"));
+    $("#clear").setAttribute("aria-pressed",cleared?"true":"false");
+    $("#clear").textContent= cleared ? "restore the filters" : "someone clears the filters";
+  }
+  $("#d-each").addEventListener("click",()=>{design="each";render();});
+  $("#d-shared").addEventListener("click",()=>{design="shared";render();});
+  $("#clear").addEventListener("click",()=>{cleared=!cleared;render();});
+  host.addEventListener("click",e=>{
+    const b=e.target.closest(".ib"); if(!b) return;
+    const tip=$("#tip"+b.dataset.i), on=!tip.classList.contains("show");
+    document.querySelectorAll(".tip").forEach(x=>x.classList.remove("show"));
+    document.querySelectorAll(".ib").forEach(x=>x.setAttribute("aria-expanded","false"));
+    tip.classList.toggle("show",on); b.setAttribute("aria-expanded",on?"true":"false");
+  });
+  render();
+
+  $("#mChoices").addEventListener("click",e=>{
+    const b=e.target.closest(".choice"); if(!b) return;
+    document.querySelectorAll("#mChoices .choice").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    const v=$("#mVerdict");
+    if(b.dataset.v==="each"){v.className="verdict ok";v.textContent="Right. One measure per tile can't lose its place, and generating them from a register keeps the wording in one source.";}
+    else if(b.dataset.v==="shared"){v.className="verdict bad";v.textContent="Tidy, but it depends on a filter on every visual. Clear the filters below and watch what happens.";}
+    else{v.className="verdict bad";v.textContent="Typed text can't be checked by a script and drifts from the documentation. One generated measure per tile keeps it in one source.";}
+    design = b.dataset.v==="shared" ? "shared" : "each"; cleared=false; render();
+    $("#mCover").classList.add("gone");
+  });
+
+  const S=[
+    ["Core business measures","The original hand-written calculations: production, prices, shares, concentration."],
+    ["Added as pages grew","Calculations added for later pages: growth periods, reserve life, supplier shares, coverage."],
+    ["Basis lines","One per table or chart tile, bound to the subtitle."],
+    ["Short basis lines","A shorter basis line for card tiles."],
+    ["Explanations","One per tile, bound to the \"i\" button's tooltip. Under 200 characters each."]
+  ];
+  $("#stack").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#stack button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    const s=S[+b.dataset.k]; $("#sName").textContent=s[0]; $("#sText").textContent=s[1];
+  });
+})();
+</script>
+</body>
+</html>

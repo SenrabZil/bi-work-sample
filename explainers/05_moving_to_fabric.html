@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Lesson 05 — Moving to Fabric · Power BI to Fabric</title>
+<style>
+  :root{
+    --frost:#EEF3F7; --panel:#FFFFFF; --ink:#13202E; --slate:#5A6A7A;
+    --line:#D3DDE6; --deep:#0E1F33; --volt:#10B5C9; --volt-ink:#0A7E8E;
+    --ember:#E0913A; --ember-ink:#B16A12; --warm:#C2603F; --ok:#2FA980; --bad:#DD6457;
+    --hdr:rgba(238,243,247,.9);
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Consolas,"Roboto Mono",monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }}
+  :root[data-theme="dark"]{
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{margin:0;background:var(--frost);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;justify-content:space-between;align-items:center;height:52px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  .bar b{font-weight:700} .bar .r{font-family:var(--mono);color:var(--slate)}
+  .hero{padding:60px 0 26px}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt-ink);margin-bottom:16px}
+  h1{font-size:clamp(32px,5.6vw,54px);line-height:1.03;letter-spacing:-.02em;margin:0 0 16px;font-weight:780}
+  .lead{font-size:clamp(18px,2.4vw,22px);color:var(--slate);max-width:42ch;margin:0}
+  .byline{margin-top:20px;font-size:14px;color:var(--slate)} .byline b{color:var(--ink)}
+  section{padding:36px 0;border-top:1px solid var(--line)}
+  .snum{font-family:var(--mono);font-size:13px;color:var(--volt-ink);letter-spacing:.1em}
+  h2{font-size:clamp(23px,3.3vw,32px);line-height:1.12;letter-spacing:-.015em;margin:6px 0 12px;font-weight:740}
+  p{margin:0 0 16px} .muted{color:var(--slate)}
+  .say{border-left:2px solid var(--volt);padding:2px 0 2px 18px;margin:18px 0}
+  .caution{border-left:2px solid var(--ember);padding:2px 0 2px 18px;margin:18px 0;color:var(--ember-ink);font-size:15px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+  .stage{position:relative;border-radius:12px;overflow:hidden;min-height:300px}
+  .cover{position:absolute;inset:0;background:linear-gradient(180deg,var(--deep),#0a1726);color:#cfe;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .5s;z-index:4}
+  .cover.gone{opacity:0;pointer-events:none} .cover .q{font-size:16px;max-width:34ch;color:#dcebf0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px}
+  .clabel{font-family:var(--mono);font-size:12px;color:var(--slate)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:13px;border:0;background:var(--panel);color:var(--slate);padding:8px 14px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--volt);color:#04222a}
+  .btn{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer}
+  .btn:hover{border-color:var(--ember)}
+  .btn[aria-pressed=true]{background:var(--ember);border-color:var(--ember);color:#2a1500}
+  .readout{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;font-family:var(--mono);font-size:13.5px;color:var(--slate)}
+  .readout b{color:var(--ink)} .readout .big{font-size:22px;font-weight:600;color:var(--ink)}
+  .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:5px 11px}
+  .tag.up{background:#fbeae7;color:#b23a2c} .tag.dn{background:#e3f6ee;color:#1c7a59}
+  .choices{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .choice{font-family:var(--mono);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;color:var(--ink);transition:.15s;text-align:left}
+  .choice:hover{border-color:var(--volt)} .choice[aria-pressed=true]{background:var(--deep);color:#fff;border-color:var(--deep)}
+  .verdict{font-size:15px;margin-top:4px;min-height:1.4em} .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+  .rule{background:var(--deep);color:#eaf6f8;border-radius:14px;padding:24px;margin-top:8px}
+  .rule h3{margin:0 0 10px;font-size:20px;color:#fff} .rule p{color:#bcd6dc;margin:0 0 10px} .rule p:last-child{margin:0} .rule .k{color:var(--volt);font-family:var(--mono)}
+  footer{padding:48px 0;color:var(--slate);font-size:13px;border-top:1px solid var(--line)}
+  :focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+
+  
+  .bar a{color:inherit;text-decoration:none}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;line-height:1.45}
+  .card b{display:block;margin-bottom:3px}
+  .chipset{display:flex;flex-wrap:wrap;gap:6px}
+  .fchip{font-family:var(--mono);font-size:12px;border-radius:7px;padding:5px 9px;border:1px solid var(--line);background:var(--frost);color:var(--slate);transition:.25s}
+  .fchip.on{background:var(--volt);border-color:var(--volt);color:#04222a}
+  .fchip.off{opacity:.55;text-decoration:line-through}
+  .gl{font-family:var(--mono);font-size:12px;color:var(--slate);margin:14px 0 6px;letter-spacing:.04em}
+  table.t{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--panel);border-radius:10px;overflow:hidden}
+  table.t th,table.t td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--slate);font-weight:600}
+  table.t tr:last-child td{border-bottom:0}
+  .scroll{overflow-x:auto}
+  .pill{font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .pill.ok{background:#e3f6ee;color:#1c7a59}.pill.warn{background:#fdf1e2;color:#9a5a10}.pill.bad{background:#fbeae7;color:#b23a2c}
+  input[type=range]{width:100%;accent-color:var(--volt)}
+  .ctl{display:flex;flex-direction:column;gap:6px;min-width:200px;flex:1}
+  .ctl label{font-family:var(--mono);font-size:12.5px;color:var(--slate);display:flex;justify-content:space-between}
+  .ctl label b{color:var(--ink)}
+  pre{background:var(--frost);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:13px;line-height:1.5}
+  code{font-family:var(--mono);font-size:.9em}
+  .src{font-size:13.5px;color:var(--slate)} .src a{color:var(--volt-ink)}
+</style>
+</head>
+<body>
+<header><div class="wrap bar"><b><a href="index.html">Power BI to Fabric</a></b><span class="r">Lesson 05 · Fabric</span></div></header>
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Lesson 05 · Fabric</div>
+    <h1>Same model,<br>new floor.</h1>
+    <p class="lead">The layers underneath move into a lakehouse. The model on top barely changes, and gains a new neighbour: data apps.</p>
+    <p class="byline">with <b>Elizabeth Cecilia</b>. Migrate the plumbing, keep the promises.</p>
+  </div>
+
+  <section>
+    <div class="snum">01</div>
+    <h2>Built to move</h2>
+    <p>The model already matches how Microsoft Fabric works. The layers (source, silver, gold) map onto a lakehouse. The files are plain text in Git, which Fabric workspaces can sync with. Row-level security lives in the model, so it travels with it. And there are no DAX calculated columns, which Direct Lake tables don't support.</p>
+    <div class="scroll"><table class="t">
+      <thead><tr><th>Today</th><th>In Fabric</th><th>Model change</th></tr></thead>
+      <tbody>
+        <tr><td>Power Query pulls each source</td><td>Sources land in a lakehouse (bronze) via a pipeline or Dataflow Gen2</td><td>none</td></tr>
+        <tr><td>One slv_ cleaning query per table</td><td>Notebooks or dataflows write silver Delta tables</td><td>none</td></tr>
+        <tr><td>Gold tables, derived columns in Power Query</td><td>Gold Delta tables with the derived columns computed there</td><td>sources repointed</td></tr>
+        <tr><td>Import model</td><td>The same model, Import or Direct Lake table by table</td><td>storage mode</td></tr>
+        <tr><td>Project files in local Git</td><td>Workspace synced with Git, promoted by a deployment pipeline</td><td>none</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="snum">02</div>
+    <h2>Import or Direct Lake, table by table</h2>
+    <p>An Import table holds its own copy of the data, rebuilt at every refresh. A Direct Lake table reads Delta tables from OneLake straight into memory.</p>
+    <p class="say"><b>Predict first:</b> when a Direct Lake model refreshes, what does it copy?</p>
+    <div class="choices" id="dChoices" role="group" aria-label="What does Direct Lake copy">
+      <button class="choice" data-v="all">All the data again</button>
+      <button class="choice" data-v="changed">Only the changed rows</button>
+      <button class="choice" data-v="meta">Only pointers to the latest files</button>
+    </div>
+    <div class="verdict" id="dVerdict" aria-live="polite"></div>
+    <div class="panel">
+      <div class="stage">
+        <div style="padding:6px 4px" id="groups"></div>
+        <div class="cover" id="dCover"><div class="q">Predict above to choose storage modes.</div></div>
+      </div>
+      <div class="readout" aria-live="polite">
+        <span class="tag dn" id="dTag">import model</span>
+        <span><span class="muted">tables copied at each refresh</span> <span class="big" id="dCopy">32</span> <span class="muted">of 32</span></span>
+        <span class="muted" id="dNote"></span>
+      </div>
+    </div>
+    <p>For a model this size, Import is still a perfectly good answer: the lookup tables and annual figures load in seconds. Monthly trade is the table that grows, so it's the natural first move to Direct Lake. Mixing the two in one model needs <b>Direct Lake on OneLake</b>, which supports composite models.</p>
+  </section>
+
+  <section>
+    <div class="snum">03</div>
+    <h2>Report or data app?</h2>
+    <p>Fabric data apps are web apps hosted in Fabric that query a published semantic model in DAX, the same way a report does. Users sign in with their work account and row-level security still applies. Everything is written in code, usually with a coding agent, and the feature is in preview.</p>
+    <p>Sort each job. Your score shows below.</p>
+    <div class="panel" id="quiz"></div>
+    <div class="readout" style="border-top:0;margin-top:0"><span><span class="muted">sorted</span> <span class="big" id="qScore">0 / 4</span></span></div>
+  </section>
+
+  <section>
+    <div class="snum">04</div>
+    <h2>The model becomes the contract</h2>
+    <p>The report and any app read the same measures, so a number can't differ between them. That also changes a design choice from lesson 02: the 97 per-tile text measures exist because report visuals can only bind to one measure. An app can read the register directly, so there they could collapse to a single lookup.</p>
+    <p class="caution">Data apps were in preview as of September 2026, and Fabric features move quickly. Check the current Microsoft documentation before relying on any detail here.</p>
+    <p class="src">Further reading: <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/direct-lake-overview" target="_blank" rel="noopener">Direct Lake overview</a> · <a href="https://learn.microsoft.com/en-us/fabric/apps/overview" target="_blank" rel="noopener">Fabric Apps overview</a> · <a href="https://tabulareditor.com/blog/fabric-apps-explained-visualization-as-code-in-a-data-app-dashboard" target="_blank" rel="noopener">Fabric data apps explained (Tabular Editor)</a></p>
+  </section>
+
+  <section>
+    <div class="snum">05</div>
+    <h2>The rule, in one breath</h2>
+    <div class="rule">
+      <h3>Move the floor, not the house: rebuild the layers underneath and keep the model on top.</h3>
+      <p>Choose <span class="k">Import or Direct Lake</span> per table, not per model. Keep standard pages in Power BI, and add data apps only where they do something a report can't.</p>
+      <p class="muted" style="color:#9fc0cb">Next: the same move, for a whole estate.</p>
+    </div>
+  </section>
+
+  <nav class="lessonseq" style="padding:30px 0 0;display:flex;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:13px;border-top:1px solid var(--line)">
+    <a href="04_found_fixed_guarded.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%">&larr; Builds on · Found, fixed, guarded</a>
+    <a href="06_migration_playbook.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%;text-align:right">Next · Migration playbook &rarr;</a>
+  </nav>
+  <footer>Power BI to Fabric · Lesson 05. Structure and counts from the model's project files, September 2026. Figures in the report are illustrative.</footer>
+</main>
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  function predict(groupId,verdictId,coverId,right,msgs,after){
+    $(groupId).addEventListener("click",e=>{
+      const b=e.target.closest(".choice"); if(!b) return;
+      document.querySelectorAll(groupId+" .choice").forEach(x=>x.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");
+      const v=$(verdictId), ok=b.dataset.v===right;
+      v.className="verdict "+(ok?"ok":"bad"); v.textContent=msgs[b.dataset.v];
+      if(after) after(b.dataset.v);
+      if(coverId) $(coverId).classList.add("gone");
+    });
+  }
+
+  const GR=[
+    {k:"dims",name:"Lookup tables",n:8,note:"small and stable"},
+    {k:"annual",name:"Annual fact tables",n:19,note:"change once a year"},
+    {k:"trade",name:"Monthly trade (live and rebuilt)",n:2,note:"the table that grows"},
+    {k:"support",name:"Stand-alone tables",n:3,note:"register, release gate, worklist"}
+  ];
+  const mode={dims:"I",annual:"I",trade:"I",support:"I"};
+  $("#groups").innerHTML=GR.map(g=>'<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)"><div><b>'+g.name+'</b> <span class="muted" style="font-size:14px">· '+g.n+' tables · '+g.note+'</span></div><div class="seg" role="group" aria-label="'+g.name+'"><button data-g="'+g.k+'" data-m="I">Import</button><button data-g="'+g.k+'" data-m="D">Direct Lake</button></div></div>').join("");
+  function draw(){
+    document.querySelectorAll("#groups .seg button").forEach(b=>b.setAttribute("aria-pressed",mode[b.dataset.g]===b.dataset.m?"true":"false"));
+    let copy=0,dl=0; GR.forEach(g=>{if(mode[g.k]==="I")copy+=g.n;else dl+=g.n;});
+    $("#dCopy").textContent=copy;
+    const t=$("#dTag");
+    if(dl===0){t.className="tag dn";t.textContent="import model";}
+    else if(copy===0){t.className="tag dn";t.textContent="direct lake model";}
+    else{t.className="tag up";t.textContent="composite model";}
+    $("#dNote").textContent= mode.trade==="D" ? "monthly trade is current as soon as its gold table is written and the model reframes" : "monthly trade is only as fresh as the last scheduled refresh";
+  }
+  $("#groups").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;mode[b.dataset.g]=b.dataset.m;draw();});
+  draw();
+  predict("#dChoices","#dVerdict","#dCover","meta",{
+    all:"That's Import. A Direct Lake refresh copies only metadata: pointers to the latest Delta files. It takes seconds.",
+    changed:"Closer, but it copies no rows at all. A Direct Lake refresh only updates pointers to the latest Delta files.",
+    meta:"Right. A Direct Lake refresh, called framing, only updates pointers to the latest files. Now pick a mode per table group."
+  });
+  const Q=[
+    ["A commodity page with slicers, drill-through and export to Excel","R","Report. Those come built in; an app would have to code every one."],
+    ["The data-tier badge from the design mock-up, which Power BI couldn't build","A","Data app. Any visual that can be coded can be built."],
+    ["An explanation panel that reads the measure register directly","A","Data app. It can look text up by key, which report visuals can't."],
+    ["A page business users change and extend themselves","R","Report. Self-service editing is what reports are for."]
+  ];
+  const ans={};
+  $("#quiz").innerHTML=Q.map((q,i)=>'<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="margin-bottom:8px">'+q[0]+'</div><div class="choices" style="margin:0" data-q="'+i+'"><button class="choice" data-a="R">Report</button><button class="choice" data-a="A">Data app</button></div><div class="verdict" id="qv'+i+'"></div></div>').join("");
+  $("#quiz").addEventListener("click",e=>{
+    const b=e.target.closest(".choice");if(!b)return;const box=b.parentElement,i=+box.dataset.q;
+    box.querySelectorAll(".choice").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    const ok=b.dataset.a===Q[i][1];ans[i]=ok;const v=$("#qv"+i);v.className="verdict "+(ok?"ok":"bad");v.textContent=Q[i][2];
+    $("#qScore").textContent=Object.values(ans).filter(Boolean).length+" / 4";
+  });
+
+})();
+</script>
+</body>
+</html>

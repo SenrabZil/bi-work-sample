@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Lesson 07 — Working with a coding agent · Power BI to Fabric</title>
+<style>
+  :root{
+    --frost:#EEF3F7; --panel:#FFFFFF; --ink:#13202E; --slate:#5A6A7A;
+    --line:#D3DDE6; --deep:#0E1F33; --volt:#10B5C9; --volt-ink:#0A7E8E;
+    --ember:#E0913A; --ember-ink:#B16A12; --warm:#C2603F; --ok:#2FA980; --bad:#DD6457;
+    --hdr:rgba(238,243,247,.9);
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Consolas,"Roboto Mono",monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }}
+  :root[data-theme="dark"]{
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{margin:0;background:var(--frost);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;justify-content:space-between;align-items:center;height:52px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  .bar b{font-weight:700} .bar .r{font-family:var(--mono);color:var(--slate)}
+  .hero{padding:60px 0 26px}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt-ink);margin-bottom:16px}
+  h1{font-size:clamp(32px,5.6vw,54px);line-height:1.03;letter-spacing:-.02em;margin:0 0 16px;font-weight:780}
+  .lead{font-size:clamp(18px,2.4vw,22px);color:var(--slate);max-width:42ch;margin:0}
+  .byline{margin-top:20px;font-size:14px;color:var(--slate)} .byline b{color:var(--ink)}
+  section{padding:36px 0;border-top:1px solid var(--line)}
+  .snum{font-family:var(--mono);font-size:13px;color:var(--volt-ink);letter-spacing:.1em}
+  h2{font-size:clamp(23px,3.3vw,32px);line-height:1.12;letter-spacing:-.015em;margin:6px 0 12px;font-weight:740}
+  p{margin:0 0 16px} .muted{color:var(--slate)}
+  .say{border-left:2px solid var(--volt);padding:2px 0 2px 18px;margin:18px 0}
+  .caution{border-left:2px solid var(--ember);padding:2px 0 2px 18px;margin:18px 0;color:var(--ember-ink);font-size:15px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+  .stage{position:relative;border-radius:12px;overflow:hidden;min-height:300px}
+  .cover{position:absolute;inset:0;background:linear-gradient(180deg,var(--deep),#0a1726);color:#cfe;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .5s;z-index:4}
+  .cover.gone{opacity:0;pointer-events:none} .cover .q{font-size:16px;max-width:34ch;color:#dcebf0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px}
+  .clabel{font-family:var(--mono);font-size:12px;color:var(--slate)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:13px;border:0;background:var(--panel);color:var(--slate);padding:8px 14px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--volt);color:#04222a}
+  .btn{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer}
+  .btn:hover{border-color:var(--ember)}
+  .btn[aria-pressed=true]{background:var(--ember);border-color:var(--ember);color:#2a1500}
+  .readout{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;font-family:var(--mono);font-size:13.5px;color:var(--slate)}
+  .readout b{color:var(--ink)} .readout .big{font-size:22px;font-weight:600;color:var(--ink)}
+  .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:5px 11px}
+  .tag.up{background:#fbeae7;color:#b23a2c} .tag.dn{background:#e3f6ee;color:#1c7a59}
+  .choices{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .choice{font-family:var(--mono);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;color:var(--ink);transition:.15s;text-align:left}
+  .choice:hover{border-color:var(--volt)} .choice[aria-pressed=true]{background:var(--deep);color:#fff;border-color:var(--deep)}
+  .verdict{font-size:15px;margin-top:4px;min-height:1.4em} .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+  .rule{background:var(--deep);color:#eaf6f8;border-radius:14px;padding:24px;margin-top:8px}
+  .rule h3{margin:0 0 10px;font-size:20px;color:#fff} .rule p{color:#bcd6dc;margin:0 0 10px} .rule p:last-child{margin:0} .rule .k{color:var(--volt);font-family:var(--mono)}
+  footer{padding:48px 0;color:var(--slate);font-size:13px;border-top:1px solid var(--line)}
+  :focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+
+  
+  .bar a{color:inherit;text-decoration:none}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;line-height:1.45}
+  .card b{display:block;margin-bottom:3px}
+  .chipset{display:flex;flex-wrap:wrap;gap:6px}
+  .fchip{font-family:var(--mono);font-size:12px;border-radius:7px;padding:5px 9px;border:1px solid var(--line);background:var(--frost);color:var(--slate);transition:.25s}
+  .fchip.on{background:var(--volt);border-color:var(--volt);color:#04222a}
+  .fchip.off{opacity:.55;text-decoration:line-through}
+  .gl{font-family:var(--mono);font-size:12px;color:var(--slate);margin:14px 0 6px;letter-spacing:.04em}
+  table.t{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--panel);border-radius:10px;overflow:hidden}
+  table.t th,table.t td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--slate);font-weight:600}
+  table.t tr:last-child td{border-bottom:0}
+  .scroll{overflow-x:auto}
+  .pill{font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .pill.ok{background:#e3f6ee;color:#1c7a59}.pill.warn{background:#fdf1e2;color:#9a5a10}.pill.bad{background:#fbeae7;color:#b23a2c}
+  input[type=range]{width:100%;accent-color:var(--volt)}
+  .ctl{display:flex;flex-direction:column;gap:6px;min-width:200px;flex:1}
+  .ctl label{font-family:var(--mono);font-size:12.5px;color:var(--slate);display:flex;justify-content:space-between}
+  .ctl label b{color:var(--ink)}
+  pre{background:var(--frost);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:13px;line-height:1.5}
+  code{font-family:var(--mono);font-size:.9em}
+  .src{font-size:13.5px;color:var(--slate)} .src a{color:var(--volt-ink)}
+</style>
+</head>
+<body>
+<header><div class="wrap bar"><b><a href="index.html">Power BI to Fabric</a></b><span class="r">Lesson 07 · Method</span></div></header>
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Lesson 07 · Method</div>
+    <h1>Show it once.<br>Then let it repeat.</h1>
+    <p class="lead">A coding agent did most of the file editing, under fixed rules. It learns from an example, proposes before it acts, checks its own work, and leaves the final look to a person.</p>
+    <p class="byline">with <b>Elizabeth Cecilia</b>. Delegate the repetition, keep the judgement.</p>
+  </div>
+
+  <section>
+    <div class="snum">01</div>
+    <h2>Three copies, three rules</h2>
+    <div class="grid">
+      <div class="card" style="border-top:3px solid var(--volt)"><b>The real project</b>Plain-text project files. The only thing the agent edits, and never used for experiments.</div>
+      <div class="card" style="border-top:3px solid var(--ok)"><b>The seed project</b>A small example. A new setting is made here by hand in Power BI Desktop, so the agent can read exactly how Desktop stores it.</div>
+      <div class="card" style="border-top:3px solid var(--slate)"><b>The frozen export</b>A published single-file snapshot. The agent never touches it.</div>
+    </div>
+    <p>Power BI's file format isn't fully documented, so the agent never guesses how a setting is written. It copies what Desktop itself wrote.</p>
+  </section>
+
+  <section>
+    <div class="snum">02</div>
+    <h2>Show it once</h2>
+    <p class="say"><b>Predict first:</b> the agent needs to apply a new formatting option to 52 tiles. What happens first?</p>
+    <div class="choices" id="aChoices" role="group" aria-label="What happens first">
+      <button class="choice" data-v="docs">The agent writes it from the documentation</button>
+      <button class="choice" data-v="seed">You set it once by hand in the seed</button>
+      <button class="choice" data-v="try">The agent tries it in the real project and you check</button>
+    </div>
+    <div class="verdict" id="aVerdict" aria-live="polite"></div>
+    <div class="panel">
+      <div class="stage">
+        <div id="loop" style="padding:6px 4px"></div>
+        <div class="cover" id="aCover"><div class="q">Predict above to step through the loop.</div></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="prev">&larr; back</button>
+        <button class="btn" id="next">next step &rarr;</button>
+        <button class="btn" id="skip" aria-pressed="false">what if we skip it?</button>
+      </div>
+      <div class="readout" aria-live="polite">
+        <span class="tag dn" id="who">you</span>
+        <span><span class="muted">step</span> <span class="big" id="sn">1</span> <span class="muted">of 6</span></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="snum">03</div>
+    <h2>Case study: the buttons that hid</h2>
+    <p>Click through what happened when each tile got an "i" button.</p>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Story beats" id="beats" style="flex-wrap:wrap"></div>
+      <p id="beat" style="margin:14px 0 0;min-height:3.2em"></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="snum">04</div>
+    <h2>What it gets wrong, and the guard for each</h2>
+    <div class="scroll"><table class="t">
+      <thead><tr><th>Risk</th><th>What happened, or could</th><th>Guard</th></tr></thead>
+      <tbody>
+        <tr><td>Checks too loose</td><td>A check confirmed a subtitle named a measure, not that it existed. Five broken cards passed.</td><td>A check that every field the report names exists</td></tr>
+        <tr><td>Guessing a format</td><td>Writing a setting the way it "should" look, not the way Desktop writes it</td><td>Seed first</td></tr>
+        <tr><td>Scope creep</td><td>Tidying files it wasn't asked to touch</td><td>It lists every file rewritten; anything unexpected is rejected</td></tr>
+        <tr><td>Confident, wrong counts</td><td>A review said 22 relationships where there were 19</td><td>A second, file-based inventory before anything is built on the numbers</td></tr>
+        <tr><td>No eyes</td><td>A build passes every check and still looks wrong</td><td>A person checks in Desktop before every save</td></tr>
+      </tbody>
+    </table></div>
+    <p class="caution" style="margin-top:18px">The agent here is Claude Code, run in its Manual permission mode. Every change starts in plan mode, which blocks edits until the plan is approved, and each proposal is reviewed before approval. Commits need an explicit go-ahead.</p>
+  </section>
+
+  <section>
+    <div class="snum">05</div>
+    <h2>The rule, in one breath</h2>
+    <div class="rule">
+      <h3>The agent does the repetitive precision work; the person keeps judgement and sign-off.</h3>
+      <p>Show it once in the <span class="k">seed</span>, let it propose, approve, let it build and validate, check with your own eyes, then commit. Every mistake it makes becomes a new rule or a new check.</p>
+      <p class="muted" style="color:#9fc0cb">That's the series. Back to the overview for the glossary.</p>
+    </div>
+  </section>
+
+  <nav class="lessonseq" style="padding:30px 0 0;display:flex;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:13px;border-top:1px solid var(--line)">
+    <a href="06_migration_playbook.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%">&larr; Builds on · Migration playbook</a>
+    <a href="index.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%;text-align:right">Series overview &rarr;</a>
+  </nav>
+  <footer>Power BI to Fabric · Lesson 07. Structure and counts from the model's project files, September 2026. Figures in the report are illustrative.</footer>
+</main>
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  function predict(groupId,verdictId,coverId,right,msgs,after){
+    $(groupId).addEventListener("click",e=>{
+      const b=e.target.closest(".choice"); if(!b) return;
+      document.querySelectorAll(groupId+" .choice").forEach(x=>x.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");
+      const v=$(verdictId), ok=b.dataset.v===right;
+      v.className="verdict "+(ok?"ok":"bad"); v.textContent=msgs[b.dataset.v];
+      if(after) after(b.dataset.v);
+      if(coverId) $(coverId).classList.add("gone");
+    });
+  }
+
+  const S=[
+    ["you","Show it by hand","Make the setting once in the seed project in Desktop, save, close.","The agent guesses the file format. It may look right in the files and break or vanish in Desktop."],
+    ["agent","Read the seed","It finds where the setting lives in the files and says so.","If the save didn't land, the agent reads an unchanged seed and copies nothing. It says so, which is the cue to save again."],
+    ["agent","Propose, then stop","In plan mode it sets out exactly what it will change. Edits are blocked until the plan is reviewed and approved.","Changes arrive unreviewed. Mistakes are found after the build instead of before it."],
+    ["agent","Build and validate","It applies the change, runs the validator, lists every file it rewrote, and stops.","Nothing proves the change didn't break something else, and unexpected file edits go unnoticed."],
+    ["you","Check in Desktop","Open the real project, refresh, look, then save and close.","A build that passes every check can still look wrong. Only eyes catch that."],
+    ["agent","Commit","It checks the working tree and commits with a message saying what changed.","Nothing to roll back to. The next change gets tangled with this one."]
+  ];
+  let i=0, skip=false;
+  function draw(){
+    const s=S[i];
+    $("#loop").innerHTML='<div style="display:flex;gap:6px;margin-bottom:14px">'+S.map((x,k)=>'<span style="flex:1;height:6px;border-radius:3px;background:'+(k<=i?(x[0]==="you"?"var(--ember)":"var(--volt)"):"var(--line)")+'"></span>').join("")+'</div>'+
+      '<h3 style="margin:0 0 6px;font-size:21px">'+s[1]+'</h3><p style="margin:0">'+(skip?'<span style="color:var(--bad)">'+s[3]+'</span>':s[2])+'</p>';
+    const w=$("#who"); w.textContent=s[0]==="you"?"you":"agent"; w.className="tag "+(s[0]==="you"?"up":"dn");
+    $("#sn").textContent=i+1;
+    $("#skip").setAttribute("aria-pressed",skip?"true":"false");
+    $("#skip").textContent=skip?"back to the step":"what if we skip it?";
+  }
+  $("#next").addEventListener("click",()=>{i=Math.min(5,i+1);skip=false;draw();});
+  $("#prev").addEventListener("click",()=>{i=Math.max(0,i-1);skip=false;draw();});
+  $("#skip").addEventListener("click",()=>{skip=!skip;draw();});
+  draw();
+  predict("#aChoices","#aVerdict","#aCover","seed",{
+    docs:"The file format isn't fully documented, so that's a guess. Set it once by hand in the seed and let the agent copy it.",
+    seed:"Right. Desktop writes the setting its own way; the agent copies that exactly, then applies it 52 times.",
+    try:"Testing in the real project risks saving a half-finished change. Experiments go in the seed, never the real project."
+  },()=>{i=0;skip=false;draw();});
+  const B=[
+    ["Problem","Every tile got an \"i\" button. In testing, clicking a tile brought it to the front and hid its button."],
+    ["Tried","Layer-order settings and \"send to back\". Neither held."],
+    ["Found","Grouping each tile with its button did. One group was made by hand in the seed and kept as the reference."],
+    ["Built","The agent built 52 groups, named after the tile titles, without moving a single visual."],
+    ["Guarded","The validator gained a rule: every button has a parent group holding exactly one tile and one button."]
+  ];
+  $("#beats").innerHTML=B.map((b,k)=>'<button data-k="'+k+'" aria-pressed="'+(k===0)+'">'+b[0].toLowerCase()+'</button>').join("");
+  function beat(k){$("#beat").textContent=B[k][1];document.querySelectorAll("#beats button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.k===k?"true":"false"));}
+  $("#beats").addEventListener("click",e=>{const b=e.target.closest("button");if(b)beat(+b.dataset.k);});
+  beat(0);
+
+})();
+</script>
+</body>
+</html>

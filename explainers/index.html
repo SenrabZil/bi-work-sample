@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>From Power BI model to Fabric: a worked approach</title>
+<style>
+  :root{
+    --frost:#EEF3F7; --panel:#FFFFFF; --ink:#13202E; --slate:#5A6A7A;
+    --line:#D3DDE6; --deep:#0E1F33; --volt:#10B5C9; --volt-ink:#0A7E8E;
+    --ember:#E0913A; --ember-ink:#B16A12; --warm:#C2603F; --ok:#2FA980; --bad:#DD6457;
+    --hdr:rgba(238,243,247,.9);
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Consolas,"Roboto Mono",monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }}
+  :root[data-theme="dark"]{
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{margin:0;background:var(--frost);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;justify-content:space-between;align-items:center;height:52px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  .bar b{font-weight:700} .bar .r{font-family:var(--mono);color:var(--slate)}
+  .hero{padding:60px 0 26px}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt-ink);margin-bottom:16px}
+  h1{font-size:clamp(32px,5.6vw,54px);line-height:1.03;letter-spacing:-.02em;margin:0 0 16px;font-weight:780}
+  .lead{font-size:clamp(18px,2.4vw,22px);color:var(--slate);max-width:42ch;margin:0}
+  .byline{margin-top:20px;font-size:14px;color:var(--slate)} .byline b{color:var(--ink)}
+  section{padding:36px 0;border-top:1px solid var(--line)}
+  .snum{font-family:var(--mono);font-size:13px;color:var(--volt-ink);letter-spacing:.1em}
+  h2{font-size:clamp(23px,3.3vw,32px);line-height:1.12;letter-spacing:-.015em;margin:6px 0 12px;font-weight:740}
+  p{margin:0 0 16px} .muted{color:var(--slate)}
+  .say{border-left:2px solid var(--volt);padding:2px 0 2px 18px;margin:18px 0}
+  .caution{border-left:2px solid var(--ember);padding:2px 0 2px 18px;margin:18px 0;color:var(--ember-ink);font-size:15px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+  .stage{position:relative;border-radius:12px;overflow:hidden;min-height:300px}
+  .cover{position:absolute;inset:0;background:linear-gradient(180deg,var(--deep),#0a1726);color:#cfe;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .5s;z-index:4}
+  .cover.gone{opacity:0;pointer-events:none} .cover .q{font-size:16px;max-width:34ch;color:#dcebf0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px}
+  .clabel{font-family:var(--mono);font-size:12px;color:var(--slate)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:13px;border:0;background:var(--panel);color:var(--slate);padding:8px 14px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--volt);color:#04222a}
+  .btn{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer}
+  .btn:hover{border-color:var(--ember)}
+  .btn[aria-pressed=true]{background:var(--ember);border-color:var(--ember);color:#2a1500}
+  .readout{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;font-family:var(--mono);font-size:13.5px;color:var(--slate)}
+  .readout b{color:var(--ink)} .readout .big{font-size:22px;font-weight:600;color:var(--ink)}
+  .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:5px 11px}
+  .tag.up{background:#fbeae7;color:#b23a2c} .tag.dn{background:#e3f6ee;color:#1c7a59}
+  .choices{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .choice{font-family:var(--mono);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;color:var(--ink);transition:.15s;text-align:left}
+  .choice:hover{border-color:var(--volt)} .choice[aria-pressed=true]{background:var(--deep);color:#fff;border-color:var(--deep)}
+  .verdict{font-size:15px;margin-top:4px;min-height:1.4em} .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+  .rule{background:var(--deep);color:#eaf6f8;border-radius:14px;padding:24px;margin-top:8px}
+  .rule h3{margin:0 0 10px;font-size:20px;color:#fff} .rule p{color:#bcd6dc;margin:0 0 10px} .rule p:last-child{margin:0} .rule .k{color:var(--volt);font-family:var(--mono)}
+  footer{padding:48px 0;color:var(--slate);font-size:13px;border-top:1px solid var(--line)}
+  :focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+
+  
+  .bar a{color:inherit;text-decoration:none}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;line-height:1.45}
+  .card b{display:block;margin-bottom:3px}
+  .chipset{display:flex;flex-wrap:wrap;gap:6px}
+  .fchip{font-family:var(--mono);font-size:12px;border-radius:7px;padding:5px 9px;border:1px solid var(--line);background:var(--frost);color:var(--slate);transition:.25s}
+  .fchip.on{background:var(--volt);border-color:var(--volt);color:#04222a}
+  .fchip.off{opacity:.55;text-decoration:line-through}
+  .gl{font-family:var(--mono);font-size:12px;color:var(--slate);margin:14px 0 6px;letter-spacing:.04em}
+  table.t{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--panel);border-radius:10px;overflow:hidden}
+  table.t th,table.t td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--slate);font-weight:600}
+  table.t tr:last-child td{border-bottom:0}
+  .scroll{overflow-x:auto}
+  .pill{font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .pill.ok{background:#e3f6ee;color:#1c7a59}.pill.warn{background:#fdf1e2;color:#9a5a10}.pill.bad{background:#fbeae7;color:#b23a2c}
+  input[type=range]{width:100%;accent-color:var(--volt)}
+  .ctl{display:flex;flex-direction:column;gap:6px;min-width:200px;flex:1}
+  .ctl label{font-family:var(--mono);font-size:12.5px;color:var(--slate);display:flex;justify-content:space-between}
+  .ctl label b{color:var(--ink)}
+  pre{background:var(--frost);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:13px;line-height:1.5}
+  code{font-family:var(--mono);font-size:.9em}
+  .src{font-size:13.5px;color:var(--slate)} .src a{color:var(--volt-ink)}
+
+  .lcards{display:flex;flex-direction:column;gap:10px;margin:18px 0}
+  .lcard{display:flex;gap:16px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;color:var(--ink);text-decoration:none;transition:border-color .15s}
+  .lcard:hover{border-color:var(--volt)}
+  .ln{font-family:var(--mono);font-size:13px;color:var(--volt-ink);padding-top:3px;min-width:22px}
+  .lcard b{display:block;font-size:19px;letter-spacing:-.01em}
+  .lcard .d{display:block;color:var(--slate);font-size:15px;margin-top:2px}
+  .lcard .try{display:block;font-family:var(--mono);font-size:12.5px;color:var(--volt-ink);margin-top:6px}
+  #gq{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);margin:8px 0 14px}
+  dl{margin:0} dt{font-weight:650;margin-top:12px} dd{margin:2px 0 0;color:var(--slate);font-size:15px}
+</style>
+</head>
+<body>
+<header><div class="wrap bar"><b>Power BI to Fabric</b><span class="r">Series · 7 lessons</span></div></header>
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow">A worked approach</div>
+    <h1>From Power BI model<br>to Fabric.</h1>
+    <p class="lead">Seven short, interactive lessons built on a real Power BI model: how it's shaped, how it explains itself, how it was checked, and how it would move to Microsoft Fabric.</p>
+    <p class="byline">with <b>Elizabeth Cecilia</b>. Each lesson asks you to predict before it shows you.</p>
+  </div>
+  <section>
+    <div class="snum">THE MODEL</div>
+    <h2>Seven lessons, about ten minutes each</h2>
+    <div class="lcards">
+    <a class="lcard" href="01_shape_of_the_model.html"><span class="ln">01</span><span><b>One model, 53 wires.</b><span class="d">The star schema: 21 fact tables, 8 lookup tables, and why the source register is the hub.</span><span class="try">Try: Trace any lookup table or page through the real 53 relationships.</span></span></a>
+    <a class="lcard" href="02_tiles_that_explain.html"><span class="ln">02</span><span><b>Every number explains itself.</b><span class="d">Basis lines and explanations on every tile, and why each gets its own measure.</span><span class="try">Try: Break a shared measure by clearing its filters.</span></span></a>
+    <a class="lcard" href="03_design_decisions.html"><span class="ln">03</span><span><b>Three rules, broken on purpose.</b><span class="d">Mixed grain, a four-way country table and a duplicated stage: reasons, costs and fixes.</span><span class="try">Try: See which figures a commodity slicer really reaches.</span></span></a>
+    <a class="lcard" href="04_found_fixed_guarded.html"><span class="ln">04</span><span><b>The check passed. It was wrong.</b><span class="d">Version control, the validator, and a gap a review found and closed.</span><span class="try">Try: Step through the validator before and after the fix.</span></span></a>
+    <a class="lcard" href="05_moving_to_fabric.html"><span class="ln">05</span><span><b>Same model, new floor.</b><span class="d">Moving the model to Fabric: lakehouse layers, Import or Direct Lake, and data apps.</span><span class="try">Try: Choose a storage mode per table group; sort jobs between report and app.</span></span></a>
+    <a class="lcard" href="06_migration_playbook.html"><span class="ln">06</span><span><b>Five routes, one groundwork.</b><span class="d">Migrating a whole Power BI estate: five routes compared, and the work every route needs.</span><span class="try">Try: Rank the routes against deadline, risk, debt and capacity.</span></span></a>
+    <a class="lcard" href="07_coding_agent.html"><span class="ln">07</span><span><b>Show it once. Then let it repeat.</b><span class="d">How a coding agent built the model under rules, and what it gets wrong.</span><span class="try">Try: Step through the loop, and see what breaks if a step is skipped.</span></span></a>
+    </div>
+    <p class="muted">The model is a minerals and metals intelligence mock-up built in Power BI. Its structure, counts and checks are real, taken from its project files. The figures on its report pages are illustrative.</p>
+  </section>
+  <section id="glossary">
+    <div class="snum">GLOSSARY</div>
+    <h2>Terms used in the series</h2>
+    <input id="gq" type="search" placeholder="Filter terms" aria-label="Filter glossary terms">
+    <dl id="gl"></dl>
+  </section>
+  <footer>Power BI to Fabric · a worked approach. September 2026. Fabric features change quickly; check Microsoft's documentation for the current state.</footer>
+</main>
+<script>
+(function(){
+  const G=[
+   ["Semantic model","The layer between the data and the report: tables, relationships, measures and security, defined once and reused by every report or app.",["semantic model","model"]],
+   ["Star schema","A layout with lookup tables (dimensions) around tables of figures (facts), each fact linked to each lookup by one key.",["star schema","star-schema"]],
+   ["Dimension","A lookup table that describes things, such as commodity, country or date. Used to slice and filter figures.",["dimension","lookup table","lookup tables"]],
+   ["Fact table","A table of figures (production, prices, trade) at a stated level of detail, linked to the lookup tables.",["fact table","fact tables","sets of figures"]],
+   ["Measure","A named calculation written in DAX, worked out at query time for whatever the user has selected.",["measure","measures"]],
+   ["DAX","Data Analysis Expressions, the formula and query language of Power BI and Fabric semantic models.",["DAX"]],
+   ["Power Query","The data-preparation tool in Power BI that cleans and shapes data before it's loaded into the model.",["Power Query"]],
+   ["Relationship","A link between two tables on a shared key. Here every relationship is many-to-one, so each figure points to exactly one lookup row.",["relationship","relationships","many-to-one"]],
+   ["Filter direction","Which way a selection flows along a relationship. Single direction (lookup to figures) avoids ambiguous results.",["single-direction","bidirectional"]],
+   ["Grain","The level of detail of a table, such as one row per commodity per year.",["grain"]],
+   ["Role-playing dimension","One lookup table used with different meanings, such as country as partner and country as supplier.",["role-playing","role tables"]],
+   ["Row-level security","Rules in the model that limit which rows each user can see. Applies to every report or app built on the model.",["row-level security","RLS"]],
+   ["Import mode","A storage mode that copies the data into the model's in-memory engine at each refresh. Fast to query.",["import mode","import-mode","Import"]],
+   ["Direct Lake","A Fabric storage mode that reads Delta tables from OneLake straight into memory without a scheduled copy.",["Direct Lake"]],
+   ["DirectQuery","A storage mode that sends each query to the source system instead of holding the data in memory.",["DirectQuery"]],
+   ["Calculated column","A column computed in DAX inside the model. This model has none; derived columns are built in Power Query instead.",["calculated column","calculated columns"]],
+   ["Calculation group","A model feature that applies one calculation pattern to many measures, such as year-on-year.",["calculation group"]],
+   ["Sort-by column","A setting that orders a text column by a number, so months or stages appear in business order.",["sort-by"]],
+   ["Display folder","A folder in the field list used to group measures. Organisation only; it doesn't change results.",["display folders","display folder"]],
+   ["PBIP","Power BI Project: a report and model saved as plain-text files instead of one binary .pbix, so they work with version control.",["PBIP"]],
+   ["TMDL","Tabular Model Definition Language: the readable text format PBIP uses for the semantic model.",["TMDL"]],
+   ["Git","Version control: every change is recorded, can be compared line by line, and can be rolled back.",["Git","version control"]],
+   ["Validator","The kit's automated test script. It checks the project files against the model and page specifications after every build.",["validator"]],
+   ["Seed project","A separate example project where a new setting is made by hand first, so the exact file format can be copied safely.",["example project"]],
+   ["Data tier","A rating of how reliable a source is, shown in brackets in each tile title.",["data tier"]],
+   ["Basis line","A short sentence under a tile saying where the figure comes from and how it is calculated.",["basis line","basis lines"]],
+   ["Measure register","The table holding every tile's basis and explanation text. The generated measures are built from it.",["measure register","register"]],
+   ["Release gate","A go / no-go check on whether a data release is fit to publish, based on refresh and reconciliation results.",["release gate"]],
+   ["Reconciliation","Comparing two versions of the same figures and counting the rows that don't match.",["reconcile","reconciliation"]],
+   ["CRMA","The EU Critical Raw Materials Act, which sets benchmarks for EU extraction, processing and recycling capacity.",["CRMA"]],
+   ["Microsoft Fabric","Microsoft's analytics platform that brings data engineering, warehousing and Power BI together on shared storage.",["Microsoft Fabric","Fabric"]],
+   ["OneLake","The single data lake under every Fabric tenant, where lakehouse and warehouse tables are stored.",["OneLake"]],
+   ["Lakehouse","A Fabric item that stores files and Delta tables and can be queried with Spark or SQL.",["lakehouse"]],
+   ["Delta table","An open table format on Parquet files with versioning. The standard table format in OneLake.",["Delta tables","Delta table"]],
+   ["Medallion layers","Bronze (raw as landed), silver (cleaned) and gold (modelled, ready for reporting).",["bronze","silver","gold"]],
+   ["Dataflow Gen2","Fabric's Power Query-based tool for loading and transforming data into a lakehouse or warehouse.",["Dataflow Gen2"]],
+   ["Deployment pipeline","A Fabric feature that promotes content through stages such as development, test and production.",["deployment pipeline"]],
+   ["CI","Continuous integration: automated checks run on every proposed change before it can be merged.",["CI","pull request"]],
+   ["Composite model","A semantic model mixing storage modes, such as Direct Lake facts with Import lookup tables.",["composite models","composite model"]],
+   ["Fabric data app","A code-first web app hosted in Fabric that queries a semantic model in DAX. Users sign in with their work account and row-level security applies. In preview.",["data app","data apps"]],
+   ["Entra ID","Microsoft's identity service: the work account people sign in with.",["work account"]],
+   ["Fabric capacity","The pool of compute a Fabric workspace runs on, sold in F sizes such as F64.",["Fabric capacity","F SKU","capacity"]],
+   ["Premium capacity","Power BI's older capacity type (P sizes), being retired in favour of Fabric capacity.",["Premium capacity"]],
+   ["Workspace","A container in the Power BI and Fabric service that holds reports, models and other items, with its own access rules.",["workspace","workspaces"]],
+   ["Semantic Link Labs","An open-source Python library from Microsoft for Fabric notebooks. It automates model checks, capacity moves and conversion to Direct Lake.",["Semantic Link Labs"]],
+   ["Best Practice Analyzer","A rule set that scans a semantic model for known design problems, such as unused objects or bidirectional filters.",["Best Practice Analyzer"]],
+   ["VertiPaq","The in-memory engine behind Import and Direct Lake models. VertiPaq Analyzer shows the size of each table and column.",["VertiPaq"]],
+   ["Cardinality","The number of distinct values in a column. High-cardinality columns cost the most memory.",["cardinality","distinct values"]],
+   ["Orphan key","A key in a fact table with no matching row in its lookup table. It shows up as a blank in reports.",["no matching lookup row","orphan"]],
+   ["Data profiling","Measuring data as it is today: counts, blanks, ranges, duplicates and broken keys, before deciding what to do with it.",["profiling","profile"]],
+   ["XMLA endpoint","A standard connection that lets external tools read and write semantic models in the service.",["XMLA"]],
+   ["Power Query Template","A file (.pqt) holding a set of Power Query queries, which can be imported into Dataflow Gen2.",["Power Query Template"]],
+   ["Stop point","The line ending every instruction to the agent that tells it to propose and wait, not act.",["stop point"]],
+   ["Frozen export","A published snapshot of the report as one .pbix file, kept exactly as released.",["frozen export"]],
+   ["Coding agent","An AI tool that reads and edits project files on instruction, such as Claude Code. Here it proposes each change and waits for approval.",["coding agent","coding assistant","AI-assisted"]]
+  ];
+  const gl=document.getElementById("gl"), q=document.getElementById("gq");
+  G.slice().sort((a,b)=>a[0].localeCompare(b[0])).forEach(g=>{const dt=document.createElement("dt");dt.textContent=g[0];const dd=document.createElement("dd");dd.textContent=g[1];gl.append(dt,dd);});
+  q.addEventListener("input",()=>{const v=q.value.trim().toLowerCase();gl.querySelectorAll("dt").forEach(dt=>{const dd=dt.nextElementSibling,on=!v||(dt.textContent+" "+dd.textContent).toLowerCase().includes(v);dt.hidden=!on;dd.hidden=!on;});});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Lesson 03 — Design decisions · Power BI to Fabric</title>
+<style>
+  :root{
+    --frost:#EEF3F7; --panel:#FFFFFF; --ink:#13202E; --slate:#5A6A7A;
+    --line:#D3DDE6; --deep:#0E1F33; --volt:#10B5C9; --volt-ink:#0A7E8E;
+    --ember:#E0913A; --ember-ink:#B16A12; --warm:#C2603F; --ok:#2FA980; --bad:#DD6457;
+    --hdr:rgba(238,243,247,.9);
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Consolas,"Roboto Mono",monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }}
+  :root[data-theme="dark"]{
+    --frost:#0B1623; --panel:#122234; --ink:#E4EDF3; --slate:#93A6B7; --line:#243A50;
+    --volt-ink:#4FD3E3; --ember-ink:#F0B26A; --hdr:rgba(11,22,35,.9);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{margin:0;background:var(--frost);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;justify-content:space-between;align-items:center;height:52px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  .bar b{font-weight:700} .bar .r{font-family:var(--mono);color:var(--slate)}
+  .hero{padding:60px 0 26px}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt-ink);margin-bottom:16px}
+  h1{font-size:clamp(32px,5.6vw,54px);line-height:1.03;letter-spacing:-.02em;margin:0 0 16px;font-weight:780}
+  .lead{font-size:clamp(18px,2.4vw,22px);color:var(--slate);max-width:42ch;margin:0}
+  .byline{margin-top:20px;font-size:14px;color:var(--slate)} .byline b{color:var(--ink)}
+  section{padding:36px 0;border-top:1px solid var(--line)}
+  .snum{font-family:var(--mono);font-size:13px;color:var(--volt-ink);letter-spacing:.1em}
+  h2{font-size:clamp(23px,3.3vw,32px);line-height:1.12;letter-spacing:-.015em;margin:6px 0 12px;font-weight:740}
+  p{margin:0 0 16px} .muted{color:var(--slate)}
+  .say{border-left:2px solid var(--volt);padding:2px 0 2px 18px;margin:18px 0}
+  .caution{border-left:2px solid var(--ember);padding:2px 0 2px 18px;margin:18px 0;color:var(--ember-ink);font-size:15px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+  .stage{position:relative;border-radius:12px;overflow:hidden;min-height:300px}
+  .cover{position:absolute;inset:0;background:linear-gradient(180deg,var(--deep),#0a1726);color:#cfe;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .5s;z-index:4}
+  .cover.gone{opacity:0;pointer-events:none} .cover .q{font-size:16px;max-width:34ch;color:#dcebf0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px}
+  .clabel{font-family:var(--mono);font-size:12px;color:var(--slate)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:13px;border:0;background:var(--panel);color:var(--slate);padding:8px 14px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--volt);color:#04222a}
+  .btn{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer}
+  .btn:hover{border-color:var(--ember)}
+  .btn[aria-pressed=true]{background:var(--ember);border-color:var(--ember);color:#2a1500}
+  .readout{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;font-family:var(--mono);font-size:13.5px;color:var(--slate)}
+  .readout b{color:var(--ink)} .readout .big{font-size:22px;font-weight:600;color:var(--ink)}
+  .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:5px 11px}
+  .tag.up{background:#fbeae7;color:#b23a2c} .tag.dn{background:#e3f6ee;color:#1c7a59}
+  .choices{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .choice{font-family:var(--mono);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;color:var(--ink);transition:.15s;text-align:left}
+  .choice:hover{border-color:var(--volt)} .choice[aria-pressed=true]{background:var(--deep);color:#fff;border-color:var(--deep)}
+  .verdict{font-size:15px;margin-top:4px;min-height:1.4em} .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+  .rule{background:var(--deep);color:#eaf6f8;border-radius:14px;padding:24px;margin-top:8px}
+  .rule h3{margin:0 0 10px;font-size:20px;color:#fff} .rule p{color:#bcd6dc;margin:0 0 10px} .rule p:last-child{margin:0} .rule .k{color:var(--volt);font-family:var(--mono)}
+  footer{padding:48px 0;color:var(--slate);font-size:13px;border-top:1px solid var(--line)}
+  :focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+
+  
+  .bar a{color:inherit;text-decoration:none}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;line-height:1.45}
+  .card b{display:block;margin-bottom:3px}
+  .chipset{display:flex;flex-wrap:wrap;gap:6px}
+  .fchip{font-family:var(--mono);font-size:12px;border-radius:7px;padding:5px 9px;border:1px solid var(--line);background:var(--frost);color:var(--slate);transition:.25s}
+  .fchip.on{background:var(--volt);border-color:var(--volt);color:#04222a}
+  .fchip.off{opacity:.55;text-decoration:line-through}
+  .gl{font-family:var(--mono);font-size:12px;color:var(--slate);margin:14px 0 6px;letter-spacing:.04em}
+  table.t{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--panel);border-radius:10px;overflow:hidden}
+  table.t th,table.t td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--slate);font-weight:600}
+  table.t tr:last-child td{border-bottom:0}
+  .scroll{overflow-x:auto}
+  .pill{font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .pill.ok{background:#e3f6ee;color:#1c7a59}.pill.warn{background:#fdf1e2;color:#9a5a10}.pill.bad{background:#fbeae7;color:#b23a2c}
+  input[type=range]{width:100%;accent-color:var(--volt)}
+  .ctl{display:flex;flex-direction:column;gap:6px;min-width:200px;flex:1}
+  .ctl label{font-family:var(--mono);font-size:12.5px;color:var(--slate);display:flex;justify-content:space-between}
+  .ctl label b{color:var(--ink)}
+  pre{background:var(--frost);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:13px;line-height:1.5}
+  code{font-family:var(--mono);font-size:.9em}
+  .src{font-size:13.5px;color:var(--slate)} .src a{color:var(--volt-ink)}
+</style>
+</head>
+<body>
+<header><div class="wrap bar"><b><a href="index.html">Power BI to Fabric</a></b><span class="r">Lesson 03 · The model</span></div></header>
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Lesson 03 · Decisions</div>
+    <h1>Three rules,<br>broken on purpose.</h1>
+    <p class="lead">A clean star schema, except in three places. Each exception was a choice, each has a cost, and each has a production answer.</p>
+    <p class="byline">with <b>Elizabeth Cecilia</b>. A shortcut you can name and cost is a decision; one you can't is a bug.</p>
+  </div>
+
+  <section>
+    <div class="snum">01</div>
+    <h2>A clean star, with three exceptions</h2>
+    <p>All 53 relationships run many-to-one in a single direction and are always active. Nothing is bidirectional, nothing joins many-to-many, and nothing waits on a switch in DAX. That's the textbook part.</p>
+    <p>Three places depart from textbook form on purpose. Each one was chosen for a reason, each has a cost, and each is something a production build would revisit.</p>
+  </section>
+
+  <section>
+    <div class="snum">02</div>
+    <h2>Commodity at two levels</h2>
+    <p>Most sources report by single commodity. Four report only by commodity group: the CRMA benchmarks, concentration, the price index and partner shares. Those four link to the group table directly. Everything else links to the commodity table, which rolls up to its group.</p>
+    <p class="say"><b>Predict first:</b> a reader picks <b>cobalt</b> in a slicer built on the commodity table. Does the CRMA benchmark figure respond?</p>
+    <div class="choices" id="gChoices" role="group" aria-label="Does CRMA respond">
+      <button class="choice" data-v="yes">Yes, it filters to cobalt's group</button>
+      <button class="choice" data-v="no">No, the slicer doesn't reach it</button>
+      <button class="choice" data-v="blank">It goes blank</button>
+    </div>
+    <div class="verdict" id="gVerdict" aria-live="polite"></div>
+    <div class="panel">
+      <div class="stage">
+        <div id="gStage" style="padding:6px 4px">
+          <div class="gl">Commodity-level fact tables (14)</div>
+          <div class="chipset" id="cF"></div>
+          <div class="gl">Group-level fact tables (4)</div>
+          <div class="chipset" id="gF"></div>
+          <div class="gl">No commodity link (3)</div>
+          <div class="chipset" id="nF"></div>
+        </div>
+        <div class="cover" id="gCover"><div class="q">Predict above to try the slicers.</div></div>
+      </div>
+      <div class="controls">
+        <span class="clabel">slicer on</span>
+        <div class="seg" role="group" aria-label="Slicer on">
+          <button id="s1" aria-pressed="true">commodity</button>
+          <button id="s2" aria-pressed="false">group copy</button>
+          <button id="s3" aria-pressed="false">group table</button>
+        </div>
+      </div>
+      <div class="readout" aria-live="polite">
+        <span class="tag up" id="gTag">partial</span>
+        <span><span class="muted">fact tables filtered</span> <span class="big" id="gN">14</span> <span class="muted">of 18 with a commodity link</span></span>
+        <span class="muted" id="gNote"></span>
+      </div>
+    </div>
+    <p>Why build it this way? Each source keeps its own grain, so no group figure is split or guessed down to commodity level. The cost is a slicer that can surprise a reader. The <b>production answer</b>: slice on the group table where group figures appear, and label group-level tiles plainly.</p>
+  </section>
+
+  <section>
+    <div class="snum">03</div>
+    <h2>One country, four meanings</h2>
+    <p>The country table has five relationships, and they don't all mean the same thing. Pick a country and it filters:</p>
+    <div class="grid">
+      <div class="card"><b>Producer</b>Country production and reserves</div>
+      <div class="card"><b>Trade partner</b>Partner shares of EU trade</div>
+      <div class="card"><b>Supplier to the EU</b>EU supplier shares</div>
+      <div class="card"><b>Largest supplier</b>Two tables name the largest supplier of each commodity</div>
+    </div>
+    <p>One table keeps the model small and gives the reader one country list. The cost: a single country slicer filters every meaning at once. The <b>production answer</b> is to split it into role tables, one per meaning, so each slicer means one thing.</p>
+  </section>
+
+  <section>
+    <div class="snum">04</div>
+    <h2>Stage, stored twice</h2>
+    <p>The value-chain coverage table links to the shared stage table. The CRMA benchmark table carries its own stage name and sort order instead, built in Power Query as the benchmark arrives. It's easy to audit against the source, but the names could drift from the shared list. The <b>production answer</b> is a stage key and one more relationship.</p>
+    <p class="caution">None of these was changed for the mock-up. The model's specification is the source of truth, and every change to it has to pass the validator.</p>
+  </section>
+
+  <section>
+    <div class="snum">05</div>
+    <h2>The rule, in one breath</h2>
+    <div class="rule">
+      <h3>Keep the star clean, and make every exception a decision you can name.</h3>
+      <p>Mixed <span class="k">grain</span>, a <span class="k">role-playing</span> country table and a duplicated stage all have reasons. What makes them defensible is that each one is written down with its cost and its fix.</p>
+      <p class="muted" style="color:#9fc0cb">Next: how a review found a real gap, and how it was closed.</p>
+    </div>
+  </section>
+
+  <nav class="lessonseq" style="padding:30px 0 0;display:flex;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:13px;border-top:1px solid var(--line)">
+    <a href="02_tiles_that_explain.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%">&larr; Builds on · Every number explains itself</a>
+    <a href="04_found_fixed_guarded.html" style="color:var(--volt-ink);text-decoration:none;max-width:48%;text-align:right">Next · Found, fixed, guarded &rarr;</a>
+  </nav>
+  <footer>Power BI to Fabric · Lesson 03. Structure and counts from the model's project files, September 2026. Figures in the report are illustrative.</footer>
+</main>
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  function predict(groupId,verdictId,coverId,right,msgs,after){
+    $(groupId).addEventListener("click",e=>{
+      const b=e.target.closest(".choice"); if(!b) return;
+      document.querySelectorAll(groupId+" .choice").forEach(x=>x.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");
+      const v=$(verdictId), ok=b.dataset.v===right;
+      v.className="verdict "+(ok?"ok":"bad"); v.textContent=msgs[b.dataset.v];
+      if(after) after(b.dataset.v);
+      if(coverId) $(coverId).classList.add("gone");
+    });
+  }
+
+  const C=["CommodityAssessment","TradeMonthly","TradeMonthly_Rebuild","MaterialIntensity","ValueChainCoverage","RecycledSupply","CommodityAnnual","PriceAnnual","CountryAnnual","SupplyDemand","EndUse","Facilities","EUCommodity","EUSupplierShare"];
+  const G=["CRMA","Concentration","PriceIndex","PartnerShare"];
+  const N=["BatteryDemand","Reconciliation","Refresh"];
+  function chips(id,list){$(id).innerHTML=list.map(n=>'<span class="fchip" data-n="'+n+'">'+n+'</span>').join("");}
+  chips("#cF",C);chips("#gF",G);chips("#nF",N);
+  let mode=1;
+  function draw(){
+    const cOn=true, gOn=mode===3;
+    document.querySelectorAll("#cF .fchip").forEach(x=>{x.className="fchip "+(cOn?"on":"off");});
+    document.querySelectorAll("#gF .fchip").forEach(x=>{x.className="fchip "+(gOn?"on":"off");});
+    document.querySelectorAll("#nF .fchip").forEach(x=>{x.className="fchip off";});
+    const n=14+(gOn?4:0); $("#gN").textContent=n;
+    const t=$("#gTag"); if(gOn){t.className="tag dn";t.textContent="all reached";}else{t.className="tag up";t.textContent="partial";}
+    $("#gNote").textContent= mode===1 ? "the four group-level tables ignore it" :
+      mode===2 ? "a group column copied onto the commodity table behaves the same way" :
+      "the filter flows group → commodity → facts, and straight to the group-level tables";
+    [1,2,3].forEach(i=>$("#s"+i).setAttribute("aria-pressed",i===mode?"true":"false"));
+  }
+  [1,2,3].forEach(i=>$("#s"+i).addEventListener("click",()=>{mode=i;draw();}));
+  draw();
+  predict("#gChoices","#gVerdict","#gCover","no",{
+    yes:"It doesn't. CRMA links to the group table, and filters only flow from a lookup table to the figures, never sideways.",
+    no:"Right. CRMA links to the group table, so a commodity slicer never reaches it. Try the group table below.",
+    blank:"It doesn't go blank. It ignores the slicer and keeps showing every group, which is harder to spot."
+  },()=>{mode=1;draw();});
+
+})();
+</script>
+</body>
+</html>
